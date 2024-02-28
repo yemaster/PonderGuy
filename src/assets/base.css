@@ -1,0 +1,24 @@
+@font-face {
+    font-family: "myriadpro-semibold";
+    src: url(./MyriadPro-Semibold.woff2);
+}
+
+@font-face {
+    font-family: "myriadpro-lightsemicn";
+    src: url(./MyriadPro-LightSemiCn.woff2);
+}
+
+@font-face {
+    font-family: "genshin";
+    src: url(./genshin.woff2);
+}
+
+
+body {
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    overflow: hidden;
+    user-select: none;
+}

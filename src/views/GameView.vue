@@ -1,0 +1,294 @@
+<script setup lang="ts">
+// Vue core modules
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+// Three.js core modules
+import * as THREE from 'three'
+import { WebGLRenderer } from 'three'
+import Picker from '@/base/picker'
+
+// Level
+import Level from '@/base/level'
+
+import debounce from 'lodash.debounce'
+
+// Get level id
+const route = useRoute()
+const router = useRouter()
+let nowLevel: Level
+const levelId = ref(Number(route.params.id))
+let levelFinished = false
+const fog = ref()
+const levelShow = ref()
+
+// Setup Three.js Scene
+// Get window sizes
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight
+}
+
+let canvas: HTMLCanvasElement
+// Define scene, camera and renderer
+const scene = new THREE.Scene()
+const camera = new THREE.OrthographicCamera(
+    sizes.width / -16,
+    sizes.width / 16,
+    sizes.height / 16,
+    sizes.height / -16,
+    -200,
+    500
+)
+//const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+let renderer!: WebGLRenderer
+camera.position.set(200, 200, 200)
+camera.lookAt(scene.position)
+scene.add(camera)
+
+// Setup lights
+const ambientLight = new THREE.AmbientLight(0xffffff)
+scene.add(ambientLight)
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+directionalLight.position.set(0, 100, 0)
+scene.add(directionalLight)
+
+// Handle Click Event
+const pickPosition = { x: 0, y: 0 }
+const originPosition = { x: 0, y: 0 }
+const picker = new Picker()
+let isObjectChosen = false
+let chosenObject: any = null
+let isPress = false
+
+const getCanvasRelativePosition = (e: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect()
+    return {
+        x: (e.clientX - rect.left) * canvas.width / rect.width,
+        y: (e.clientY - rect.top) * canvas.height / rect.height,
+    }
+}
+const setPickPosition = (e: MouseEvent) => {
+    const pos = getCanvasRelativePosition(e)
+    pickPosition.x = (pos.x / canvas.width) * 2 - 1
+    pickPosition.y = (pos.y / canvas.height) * -2 + 1
+    if (isPress) {
+        if (!isObjectChosen) {
+            /*const deltaX = e.clientX - originPosition.x
+            const deltaY = e.clientY - originPosition.y
+            camera.position.x -= deltaX
+            camera.position.y += deltaY
+            camera.position.z += deltaX*/
+        }
+        else {
+            if (chosenObject && nowLevel.animateProgress === -1) {
+                if (chosenObject.onClick)
+                    chosenObject.onClick(picker.raycaster, picker.pickedObjectPoint)
+            }
+        }
+        originPosition.x = e.clientX
+        originPosition.y = e.clientY
+    }
+    else if (picker.pickedObject) {
+        //
+    }
+}
+const clearPickPosition = () => {
+    pickPosition.x = -100000
+    pickPosition.y = -100000
+    originPosition.x = -100000
+    originPosition.y = -100000
+    isObjectChosen = false
+}
+clearPickPosition()
+window.addEventListener('mousemove', setPickPosition)
+window.addEventListener('mouseout', clearPickPosition)
+window.addEventListener('mouseleave', clearPickPosition)
+window.addEventListener('touchstart', (e: TouchEvent) => {
+    e.preventDefault()
+    setPickPosition(e.touches[0])
+}, { passive: false })
+window.addEventListener('touchmove', (e: TouchEvent) => {
+    setPickPosition(e.touches[0])
+})
+window.addEventListener('touchend', clearPickPosition)
+
+// Hanlde canvas resize event
+const canvasResizeHandler = () => {
+    const rects = canvas.getBoundingClientRect()
+
+    sizes.height = rects.height
+    sizes.width = rects.width
+
+    camera.left = sizes.width / -2
+    camera.right = sizes.width / 2
+    camera.top = sizes.height / 2
+    camera.bottom = sizes.height / -2
+
+    camera.left *= 0.5
+    camera.right *= 0.5
+    camera.top *= 0.5
+    camera.bottom *= 0.5
+
+    camera.updateProjectionMatrix()
+
+    renderer.setSize(sizes.width, sizes.height)
+    renderer.setPixelRatio(window.devicePixelRatio)
+}
+
+// Setup Scene
+const setupScene = () => {
+    canvas = document.getElementById("pg-canvas") as HTMLCanvasElement
+    renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+    })
+    nowLevel = new Level(levelId.value, scene, camera, renderer)
+
+    //const oc = new OrbitControls(camera, renderer.domElement)
+
+    canvas.addEventListener("mousedown", (e: MouseEvent) => {
+        isObjectChosen = !(picker.pickedObject === undefined)
+        isPress = true
+        originPosition.x = e.clientX
+        originPosition.y = e.clientY
+
+        if (picker.pickedObject && nowLevel.animateProgress === -1) {
+            const p = picker.pickedObject.parent
+            if (p && p.type === 'Group' && p.movable) {
+                chosenObject = p
+                if (p.onClickStart)
+                    p.onClickStart(picker.raycaster, picker.pickedObjectPoint)
+            }
+        }
+    })
+
+    canvas.addEventListener("mouseup", (e) => {
+        isPress = false
+        if (chosenObject && nowLevel.animateProgress === -1) {
+            if (chosenObject.onClickEnd) {
+                chosenObject.onClickEnd(picker.raycaster, picker.pickedObjectPoint)
+                const route = nowLevel.check()
+                if (route !== null)
+                    nowLevel.walkRoute(route)
+            }
+        }
+    })
+
+    canvasResizeHandler()
+
+    const showNextLevel = () => {
+        setTimeout(() => {
+            fog.value.style.visibility = "visible"
+            fog.value.style.opacity = "1"
+        }, 1000)
+        setTimeout(() => {
+            levelShow.value.style.opacity = "1"
+        }, 1300)
+        setTimeout(() => {
+            levelShow.value.style.transition = "all .2s"
+            levelShow.value.style.opacity = "0"
+        }, 2100)
+        setTimeout(() => {
+            levelShow.value.innerText = "Finish!"
+            levelShow.value.style.opacity = "1"
+        }, 2300)
+        setTimeout(() => {
+            fog.value.style.opacity = "0"
+        }, 4000)
+        setTimeout(() => {
+            router.replace(`/game/list?level=${levelId.value + 1}`)
+        }, 5000)
+    }
+
+    // Animate three.js scene
+    const animate = () => {
+        requestAnimationFrame(animate);
+        if (nowLevel.animateProgress === 200) {
+            nowLevel.animateProgress = -1
+            nowLevel.enableControls()
+            if (!nowLevel.nextStage()) {
+                levelFinished = true
+                showNextLevel()
+            }
+        }
+        if (levelFinished) {
+            camera.rotateY(0.001)
+        }
+        if (nowLevel.animateProgress !== -1) {
+            nowLevel.animateProgress += 2
+            nowLevel.updatePonder(nowLevel.animateProgress)
+        }
+        picker.pick(new THREE.Vector2(pickPosition.x, pickPosition.y), scene, camera)
+        renderer.render(scene, camera);
+    }
+    animate()
+
+    setTimeout(() => {
+        levelShow.value.style.top = "50%"
+        levelShow.value.style.opacity = "1"
+    }, 200)
+
+    setTimeout(() => {
+        fog.value.style.opacity = "0"
+        levelShow.value.style.opacity = "0"
+        fog.value.style.visibility = "hidden"
+    }, 2200)
+}
+
+onMounted(setupScene)
+window.addEventListener("resize", debounce(canvasResizeHandler, 100))
+
+</script>
+
+<template>
+    <div class="fog" ref="fog">
+        <div class="level-show" ref="levelShow">Level {{ levelId }}</div>
+    </div>
+    <div class="pg-game-container">
+        <canvas id="pg-canvas"></canvas>
+    </div>
+</template>
+
+<style scoped>
+.fog {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 255, 255, .8);
+    backdrop-filter: blur(5px);
+    z-index: 5;
+    transition: all .8s;
+}
+
+.level-show {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+
+    font-family: "genshin";
+    font-size: 48px;
+    padding: 32px 64px;
+    border: 10px solid #000;
+
+    opacity: 0;
+    z-index: 6;
+    transition: all .8s;
+}
+
+.pg-game-container {
+    width: 100vw;
+    height: 100vh;
+}
+
+#pg-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+</style>

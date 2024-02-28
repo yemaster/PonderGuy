@@ -1,0 +1,15 @@
+{
+    "background": "#feffbd",
+    "start": [3, 3, 7],
+    "dests": [[3, 3, 3], [7, 3, 11]],
+    "objects": [
+        { "type": "Plane", "pos": [0, 0, 0], "color": "#fefefe" },
+        { "type": "Cube", "pos": [3, 3, 3] },
+        { "type": "Cube", "pos": [3, 2, 3] },
+        { "type": "Cube", "pos": [3, 1, 3] },
+        { "type": "Cube", "pos": [3, 0, 3] },
+        { "type": "Cube", "pos": [7, 3, 11] },
+        { "type": "Drawbox", "pos": [7, 3, 3], "size": [1, 1, 4], "range": [[1], [1], [3, 7]] },
+        { "type": "Rotator", "pos": [3, 3, 7], "size": 4 }
+    ]
+}
