@@ -1,3 +1,4 @@
+// Three.js & Core components
 import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth } from "./constants";
@@ -7,6 +8,9 @@ import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import Mirror from "@/components/mirror"
 import { DragControls } from "three/examples/jsm/Addons.js"
+
+// Axios
+import axios from 'axios'
 
 class Level {
     scene: Scene;
@@ -50,7 +54,8 @@ class Level {
         }, pos1, pos2)
     }
     setupScene(): void {
-        import(`@/levels/level${this.level}.json`).then(levelInfo => {
+        axios.get(`/levels/level${this.level}.json`).then(res => {
+            const levelInfo = res.data
             this.scene.background = new Color(levelInfo.background || "#feffbd")
 
             this.startPos = new Vector3().fromArray(levelInfo.start)

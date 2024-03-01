@@ -2,9 +2,11 @@
 // Vue core modules
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+const route = useRoute()
+const router = useRouter()
 
 // Three.js core modules
-import * as THREE from 'three'
+import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2 } from 'three'
 import { WebGLRenderer } from 'three'
 import Picker from '@/base/picker'
 
@@ -14,11 +16,8 @@ import Level from '@/base/level'
 import debounce from 'lodash.debounce'
 
 // Get level id
-const route = useRoute()
-const router = useRouter()
 let nowLevel: Level
 const levelId = ref(Number(route.params.id))
-let levelFinished = false
 const fog = ref()
 const levelShow = ref()
 
@@ -31,8 +30,8 @@ const sizes = {
 
 let canvas: HTMLCanvasElement
 // Define scene, camera and renderer
-const scene = new THREE.Scene()
-const camera = new THREE.OrthographicCamera(
+const scene = new Scene()
+const camera = new OrthographicCamera(
     sizes.width / -16,
     sizes.width / 16,
     sizes.height / 16,
@@ -40,17 +39,16 @@ const camera = new THREE.OrthographicCamera(
     -200,
     500
 )
-//const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 let renderer!: WebGLRenderer
 camera.position.set(200, 200, 200)
 camera.lookAt(scene.position)
 scene.add(camera)
 
 // Setup lights
-const ambientLight = new THREE.AmbientLight(0xffffff)
+const ambientLight = new AmbientLight(0xffffff)
 scene.add(ambientLight)
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+const directionalLight = new DirectionalLight(0xffffff, 0.8)
 directionalLight.position.set(0, 100, 0)
 scene.add(directionalLight)
 
@@ -140,7 +138,7 @@ const canvasResizeHandler = () => {
 // Setup Scene
 const setupScene = () => {
     canvas = document.getElementById("pg-canvas") as HTMLCanvasElement
-    renderer = new THREE.WebGLRenderer({
+    renderer = new WebGLRenderer({
         canvas,
         antialias: true,
         alpha: true,
@@ -207,12 +205,11 @@ const setupScene = () => {
 
     // Animate three.js scene
     const animate = () => {
-        requestAnimationFrame(animate);
+        requestAnimationFrame(animate)
         if (nowLevel.animateProgress === 200) {
             nowLevel.animateProgress = -1
             nowLevel.enableControls()
             if (!nowLevel.nextStage()) {
-                levelFinished = true
                 showNextLevel()
             }
             else {
@@ -225,28 +222,27 @@ const setupScene = () => {
             nowLevel.animateProgress += 2
             nowLevel.updatePonder(nowLevel.animateProgress)
         }
-        picker.pick(new THREE.Vector2(pickPosition.x, pickPosition.y), scene, camera)
-        renderer.render(scene, camera);
+        picker.pick(new Vector2(pickPosition.x, pickPosition.y), scene, camera)
+        renderer.render(scene, camera)
     }
     animate()
 
     setTimeout(() => {
         levelShow.value.style.top = "50%"
         levelShow.value.style.opacity = "1"
-    }, 0)
+    }, 200)
 
     setTimeout(() => {
         fog.value.style.opacity = "0"
         levelShow.value.style.opacity = "0"
         fog.value.style.visibility = "hidden"
-    }, 0) // 2200
+    }, 2200)
 }
-const axesHelper = new THREE.AxesHelper(100)
-scene.add(axesHelper)
+//const axesHelper = new THREE.AxesHelper(100)
+//scene.add(axesHelper)
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))
-
 </script>
 
 <template>

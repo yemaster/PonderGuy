@@ -1,13 +1,18 @@
 <script setup lang="ts">
+// Vue Core
 import { ref, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
+// Axios
+import axios from 'axios'
 
 const route = useRoute()
 const router = useRouter()
 
 const level_list: Ref<string[]> = ref([])
 const now_level = ref(0)
-import("@/levels/list.json").then(level_data => {
+axios.get("/levels/list.json").then(res => {
+    const level_data = res.data
     level_list.value = level_data.levels
 
     let tmp = Number(route.query.level)
