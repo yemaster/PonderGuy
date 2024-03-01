@@ -1,0 +1,17 @@
+{
+    "background": "#feffbd",
+    "start": [2, 0, 2],
+    "dests": [[-2, 0, 1]],
+    "objects": [
+        { "type": "Cube", "pos": [-2, 0, 1] },
+        { "type": "Cube", "pos": [2, 0, 2] },
+        { "type": "Drawbox", "pos": [5, 0, 1], "size": [4, 1, 1], "range":[[0, 5], [1], [1]] },
+        { "type": "Rotator", "pos": [1, 0, -4], "size": 5 }
+    ],
+    "mirror": {
+        "pos": [0, 0, 5],
+        "size": [0, 10, 5],
+        "face": "x",
+        "range": [[1], [1], [-20, 20]]
+    }
+}

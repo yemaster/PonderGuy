@@ -167,7 +167,7 @@ const setupScene = () => {
         }
     })
 
-    canvas.addEventListener("mouseup", (e) => {
+    canvas.addEventListener("mouseup", () => {
         isPress = false
         if (chosenObject && nowLevel.animateProgress === -1) {
             if (chosenObject.onClickEnd) {
@@ -215,9 +215,11 @@ const setupScene = () => {
                 levelFinished = true
                 showNextLevel()
             }
-        }
-        if (levelFinished) {
-            camera.rotateY(0.001)
+            else {
+                const route = nowLevel.check()
+                if (route !== null)
+                    nowLevel.walkRoute(route)
+            }
         }
         if (nowLevel.animateProgress !== -1) {
             nowLevel.animateProgress += 2

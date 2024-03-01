@@ -66,14 +66,14 @@ class DrawBox extends Component {
             }
             e.object.position.fromArray(tmp)
 
-            if (e.object?.parent?.mirrorComponent) {
+            if ((e.object?.parent as any)?.mirrorComponent) {
                 let tmpPos: [number, number, number] = [0, 0, 0]
                 for (let i = 0; i < tmpPos.length; ++i)
                     tmpPos[i] = (tmp[i] - unitWidth * (_t.len[i] || 1) / 2) / unitWidth
 
                 tmpPos = calcMirrorPos(tmpPos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
-                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face]
-                e.object.parent.mirrorComponent.setPos(tmpPos)
+                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face];
+                (e.object.parent as any).mirrorComponent.setPos(tmpPos)
             }
         })
         controller.addEventListener("dragend", (e) => {
@@ -84,10 +84,10 @@ class DrawBox extends Component {
             }
             e.object.position.fromArray(tmp)
 
-            if (e.object?.parent?.mirrorComponent) {
+            if ((e.object?.parent as any)?.mirrorComponent) {
                 const tmpPos = calcMirrorPos(_t.pos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
-                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face]
-                e.object.parent.mirrorComponent.setPos(tmpPos)
+                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face];
+                (e.object.parent as any).mirrorComponent.setPos(tmpPos)
             }
         })
     }

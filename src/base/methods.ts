@@ -14,7 +14,7 @@ export const fixPos = (p: number, l: number = 1): number => {
 
 export const calcMirrorPos = (p: [number, number, number], m: [number, number, number], face: number): [number, number, number] => {
     const tmp = Array.from(p) as [number, number, number]
-    tmp[face] = 2 * m[face] - tmp[face]
+    tmp[face] = 2 * m[face] - tmp[face] - 1
     return tmp
 }
 

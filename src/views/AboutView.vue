@@ -56,7 +56,6 @@ onMounted(() => {
   function animate() {
     requestAnimationFrame(animate);
 
-    var k = Math.random() * 2
     renderer.render(scene, camera);
   }
 

@@ -6,7 +6,7 @@ import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import Mirror from "@/components/mirror"
-import { DragControls, OrbitControls } from "three/examples/jsm/Addons.js"
+import { DragControls } from "three/examples/jsm/Addons.js"
 
 class Level {
     scene: Scene;
@@ -24,6 +24,7 @@ class Level {
     route: Vector3[] = [];
     controlList: DragControls[] = [];
     allCubes: any[] = [];
+    mirror: Mirror | undefined;
     level: number;
     constructor(level: number, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer) {
         this.level = level
@@ -39,7 +40,14 @@ class Level {
             return null
         const pos1 = this.nowStage > 0 ? this.destPos[this.nowStage - 1] : this.startPos,
             pos2 = this.destPos[this.nowStage]
-        return calcRoute(this.scene, pos1, pos2)
+        return calcRoute({
+            objs: this.allCubes,
+            mirror: this.mirror ? {
+                pos: this.mirror.pos,
+                len: this.mirror.len,
+                objs: this.mirror.inMirrorObjs
+            } : undefined
+        }, pos1, pos2)
     }
     setupScene(): void {
         import(`@/levels/level${this.level}.json`).then(levelInfo => {
@@ -79,14 +87,14 @@ class Level {
                 }
             })
             if (levelInfo.mirror) {
-                const mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size)
-                mirror.setupMirrorCubes(this.allCubes, this.scene)
-                const mirrorDrag = new DragControls(mirror.children, this.camera, this.renderer.domElement)
-                mirror.setupController(mirrorDrag, levelInfo.mirror.range || [[1], [1], [1]])
-                this.scene.add(mirror)
+                this.mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size)
+                this.mirror.setupMirrorCubes(this.allCubes, this.scene)
+                const mirrorDrag = new DragControls(this.mirror.children, this.camera, this.renderer.domElement)
+                this.mirror.setupController(mirrorDrag, levelInfo.mirror.range || [[1], [1], [1]])
+                this.scene.add(this.mirror)
             }
-        }).catch((E) => {
-            console.log("Cannot import level file!")
+        }).catch((e) => {
+            console.log("Cannot import level file!", e)
         })
     }
     setupPonder(pos: Vector3) {

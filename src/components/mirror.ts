@@ -1,8 +1,8 @@
-import { unitWidth, cubeNewIndices } from "@/base/constants"
+import { unitWidth } from "@/base/constants"
 import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
-import { PlaneGeometry, MeshBasicMaterial, Mesh, type ColorRepresentation, Scene, Vector3, Plane } from "three"
+import { PlaneGeometry, MeshBasicMaterial, Mesh, Scene, Vector3, Plane } from "three"
 import Component from "@/base/component"
 import { DragControls } from "three/examples/jsm/Addons.js"
 import { calcPos, fixPos, calcMirrorPos, calcMirrorAngle } from "@/base/methods"
@@ -95,20 +95,19 @@ export default class Mirror extends Component {
         ]
         //console.log(this.clippingPlanes, left * unitWidth, bottom * unitWidth, this.pos[2] * unitWidth)
         this.inMirrorObjs.forEach(v => {
-            v.children.forEach(k => {
+            v.children.forEach((k: any) => {
                 k.material.clippingPlanes = this.clippingPlanes
                 k.material.clipIntersection = false
             })
         })
 
-        const reverseClippingPlanes = []
+        const reverseClippingPlanes: Plane[] = []
         for (const i of this.clippingPlanes) {
             reverseClippingPlanes.push(i.clone().negate())
         }
 
         this.realObjs.forEach(v => {
-            console.log(v)
-            v.children.forEach(k => {
+            v.children.forEach((k: any) => {
                 k.material.clippingPlanes = reverseClippingPlanes
                 k.material.clipIntersection = true
             })

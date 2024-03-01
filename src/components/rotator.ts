@@ -143,12 +143,14 @@ class Rotator extends Component {
         this.rotateY(angle)
 
         this.position.set(unitWidth * (this.pos[0] + 1 / 2), unitWidth * this.pos[1], unitWidth * (this.pos[2] + 1 / 2))
-        const rot = this.rotation.toArray()
+        const rot = this.rotation.toArray() as [number, number, number]
         for (let i = 0; i < 3; ++i) {
             rot[i] = Math.round(2 * rot[i] / Math.PI)
             rot[i] = (rot[i] % 4 + 4) % 4
         }
         this.angle = rot[1]
+        if (![0, 1, 2, 3].includes(this.angle))
+            this.angle = 0
         if (this.angle === 0 && rot[0] === 2) {
             this.angle = 2
         }

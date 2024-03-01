@@ -1,4 +1,4 @@
-import { Scene, Vector3 } from 'three'
+import { Vector3 } from 'three'
 
 class Point {
     x: number;
@@ -8,8 +8,8 @@ class Point {
         this.x = x || 0
         this.y = y || 0
     }
-    fromArray(p: number[]) {
-        if (p.length === 3) {
+    fromArray(p: [number, number, number, number?]) {
+        if (p.length === 3 || p.length === 4) {
             this.x = -p[1] + p[2]
             this.y = p[0] - p[1]
         }
@@ -33,21 +33,22 @@ class Point {
     }
 }
 
-export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): Vector3[] | null {
-    const elements = scene.children
-    const tmpPoint: number[][] = [];
-    elements.forEach(v => {
+function getVirtualPos(arr: any[]) {
+    const res: [number, number, number][] = []
+    arr.forEach(v => {
         if (v.isGroup) {
+            let d1 = [0, 0, 1]
+            let d2 = [1, 0, 0]
             //console.log(v)
             switch (v.name) {
                 case "Cube":
-                    tmpPoint.push(v.pos)
+                    res.push(v.pos)
                     break
                 case "Drawbox":
                     for (let i = 0; i < v.len[0]; ++i)
                         for (let j = 0; j < v.len[1]; ++j)
                             for (let k = 0; k < v.len[2]; ++k) {
-                                tmpPoint.push([
+                                res.push([
                                     v.pos[0] + i,
                                     v.pos[1] + j,
                                     v.pos[2] + k
@@ -56,21 +57,21 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
                     break
                 case "Rotator":
                     //console.log(v.pos, v.len, v.angle)
-                    const d1 = [0, 0, 1]
+                    d1 = [0, 0, 1]
+                    d2 = [1, 0, 0]
                     if (v.angle === 1 || v.angle === 2)
                         d1[2] = -1
-                    const d2 = [1, 0, 0]
                     if (v.angle === 2 || v.angle === 3)
                         d2[0] = -1
                     for (let i = 0; i < v.len; ++i) {
-                        tmpPoint.push([
+                        res.push([
                             v.pos[0] + d1[0] * i,
                             v.pos[1] + d1[1] * i,
                             v.pos[2] + d1[2] * i
                         ])
                     }
                     for (let i = 1; i < v.len; ++i) {
-                        tmpPoint.push([
+                        res.push([
                             v.pos[0] + d2[0] * i,
                             v.pos[1] + d2[1] * i,
                             v.pos[2] + d2[2] * i
@@ -79,6 +80,52 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
             }
         }
     })
+    return res
+}
+
+
+function filterObjs(pos: [number, number, number, number?][], mPos: [number, number, number], mLen: [number, number, number], type: number = 1) {
+    const face = mLen[0] === 0 ? 0 : 2
+    const left = (face === 2) ? (-mPos[0] - 1) : (mPos[2] + mLen[2] - 1)
+    const right = (face === 2) ? (-mPos[0] - mLen[0] + 1) : (mPos[2] + 1)
+    const bottom = -mPos[1]
+    const top = -mPos[1] - mLen[1] + 1
+
+    pos.forEach(v => {
+        let res = 0
+        // 0 Whole, 1: Left, 2: Right, 3: Hidden
+        const x = v[2] - v[1], y = v[0] - v[1]
+        const row = x - y, col = y
+
+        if (v[face] >= mPos[face])
+            res = 0
+        else if (col <= bottom && col >= top) {
+            if (row <= left && row >= right)
+                res = 3
+            else if (row === left + 1)
+                res = 1
+            else if (row + 1 === right)
+                res = 2
+            else
+                res = 0
+        }
+        else
+            res = 0
+
+        if (type !== 1)
+            res = 3 - res
+
+        if (v.length === 4)
+            v[3] = res
+        else
+            v.push(res)
+
+        //console.log(row, col, left, right, bottom, top, res)
+    })
+}
+
+export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [number, number, number], len: [number, number, number], objs: any[] } }, start: Vector3, end: Vector3): Vector3[] | null {
+    let realPoints: [number, number, number, number?][] = getVirtualPos(levelObjs.objs)
 
     const points: Point[] = []
     let st = -1, ed = -1
@@ -99,14 +146,26 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
                 ed = points.length - 1
         }
     }
-    for (let i = 0; i < tmpPoint.length; ++i) {
+
+    if (levelObjs.mirror !== undefined) {
+        filterObjs(realPoints, levelObjs.mirror.pos, levelObjs.mirror.len, 1)
+        const mirrorPoints: [number, number, number, number?][] = getVirtualPos(levelObjs.mirror.objs)
+        filterObjs(mirrorPoints, levelObjs.mirror.pos, levelObjs.mirror.len, 0)
+        realPoints = realPoints.concat(mirrorPoints)
+    }
+
+    // Build Vertex
+
+    // Handle covering
+    const tmp = []
+    for (let i = 0; i < realPoints.length; ++i) {
         let flag = true
-        for (let j = 0; j < tmpPoint.length; ++j) {
-            const d1x = tmpPoint[i][0] - tmpPoint[i][1]
-            const d1y = tmpPoint[i][2] - tmpPoint[i][1]
-            const d2x = tmpPoint[j][0] - tmpPoint[j][1]
-            const d2y = tmpPoint[j][2] - tmpPoint[j][1]
-            if (tmpPoint[j][1] > tmpPoint[i][1] &&
+        for (let j = 0; j < realPoints.length; ++j) {
+            const d1x = realPoints[i][0] - realPoints[i][1]
+            const d1y = realPoints[i][2] - realPoints[i][1]
+            const d2x = realPoints[j][0] - realPoints[j][1]
+            const d2y = realPoints[j][2] - realPoints[j][1]
+            if (realPoints[j][1] > realPoints[i][1] &&
                 (((d1x === d2x) && (d1y === d2y + 1)) ||
                     ((d1x === d2x + 1) && (d1y === d2y)) ||
                     ((d1x === d2x + 1) && (d1y === d2y + 1)))) {
@@ -115,13 +174,37 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
             }
         }
         if (flag) {
-            addPoint(new Point().fromArray(tmpPoint[i]))
+            tmp.push(realPoints[i])
         }
+    }
+    // Handle Mirror
+    for (let i = 0; i < realPoints.length; ++i) {
+        let flag = false
+        const status = realPoints[i][3] || 0
+        // Skip hidden cubes
+        if (status === 3)
+            continue
+        else if (status > 0) {
+            // Find another part
+            for (let j = 0; j < realPoints.length; ++j)
+                if (((realPoints[j][3] || 0) + status === 3) &&
+                    (realPoints[j][2] - realPoints[j][1] === realPoints[i][2] - realPoints[i][1]) &&
+                    (realPoints[j][0] - realPoints[j][1] === realPoints[i][0] - realPoints[i][1])) {
+                    flag = true
+                    break
+                }
+        }
+        else
+            flag = true
+        if (flag)
+            addPoint(new Point().fromArray(realPoints[i]))
     }
     if (st === -1)
         return null
     if (ed === -1)
         return null
+
+    // Build Edges
     const edges = new Array(points.length)
     for (let i = 0; i < edges.length; ++i)
         edges[i] = []
@@ -131,6 +214,8 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
                 edges[i].push(j)
         }
     //console.log(edges)
+
+    // Use SPFA to calculate route
     const vis = new Array(points.length)
     const dis = new Array(points.length)
     const pre = new Array(points.length)
