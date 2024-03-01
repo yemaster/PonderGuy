@@ -1,9 +1,10 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
+import { calcPos } from "@/base/methods";
 import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4, Vector3 } from "three"
 
 class Cube extends Component {
-    pos: Vector3;
+    pos: [number, number, number];
     constructor(...args: any) {
         super(...args)
         this.name = "Cube"
@@ -14,16 +15,25 @@ class Cube extends Component {
     }
     generateCube(pos: number[], color: ColorRepresentation = 0x54c8ff) {
         const cubeGeometry = new BoxGeometry(unitWidth, unitWidth, unitWidth)
-        
+
         const cubeMaterial = new MeshLambertMaterial({ color })
         const cube = new Mesh(cubeGeometry, cubeMaterial)
 
-        cube.position.x = (pos[0] || 0) * unitWidth + Number(unitWidth / 2)
-        cube.position.y = (pos[1] || 0) * unitWidth + Number(unitWidth / 2)
-        cube.position.z = (pos[2] || 0) * unitWidth + Number(unitWidth / 2)
+        cube.position.x = calcPos(pos[0], 1)
+        cube.position.y = calcPos(pos[1], 1)
+        cube.position.z = calcPos(pos[2], 1)
 
         cube.applyMatrix4(new Matrix4().makeScale(1, 1, 1))
         this.add(cube)
+    }
+
+    setPos(pos: [number, number, number]) {
+        this.pos = pos
+        this.children.forEach(e => {
+            e.position.x = calcPos(pos[0], 1)
+            e.position.y = calcPos(pos[1], 1)
+            e.position.z = calcPos(pos[2], 1)
+        })
     }
 }
 (Cube as any).cnName = "正方体";

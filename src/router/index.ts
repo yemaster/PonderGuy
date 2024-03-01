@@ -14,14 +14,14 @@ const router = createRouter({
             component: () => import('@/views/LevelsView.vue')
         },
         {
+            path: '/game/design',
+            name: 'gamedesign',
+            component: () => import('@/views/DesignView.vue')
+        },
+        {
             path: '/game/:id',
             name: 'game',
             component: () => import('@/views/GameView.vue')
-        },
-        {
-            path: '/test',
-            name: 'test',
-            component: () => import('@/views/AboutView.vue')
         }
     ]
 })

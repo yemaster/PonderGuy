@@ -51,6 +51,19 @@ class DrawBox extends Component {
         })
     }
 
+    setSize(size: [number, number, number]) {
+        this.len = size
+        this.children.forEach(e => {
+            e.position.x = calcPos(this.pos[0], size[0])
+            e.position.y = calcPos(this.pos[1], size[1])
+            e.position.z = calcPos(this.pos[2], size[2])
+        })
+    }
+
+    setRange(range: [number[], number[], number[]]) {
+        this.range = range
+    }
+
     onControlDrag(e: any) {
         const tmp = e.object.position.toArray()
         for (let i = 0; i < 3; ++i) {

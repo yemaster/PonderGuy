@@ -50,6 +50,26 @@ class Rotator extends Component {
         this.position.set(unitWidth * (pos[0] + 1 / 2), unitWidth * pos[1], unitWidth * (pos[2] + 1 / 2))
     }
 
+    setSize(len: number) {
+        this.len = len
+        const box1 = this.children[0] as Mesh
+        const box2 = this.children[0] as Mesh
+
+        box1.geometry.dispose()
+        box1.geometry = new BoxGeometry(unitWidth * len, unitWidth, unitWidth)
+
+        box1.position.x = calcPos(-1 / 2, len)
+        box1.position.y = calcPos(0)
+        box1.position.z = calcPos(-1 / 2)
+
+        box2.geometry.dispose()
+        box2.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * len)
+
+        box2.position.x = calcPos(-1 / 2)
+        box2.position.y = calcPos(0)
+        box2.position.z = calcPos(-1 / 2, len)
+    }
+
     generateElement(...args: any): void {
         this.generateDrawbox(args[0], args[1], args[2])
     }

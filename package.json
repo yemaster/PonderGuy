@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "bootstrap": "^5.3.3",
     "lodash.debounce": "^4.0.8",
     "lodash.merge": "^4.6.2",
     "pinia": "^2.1.7",
