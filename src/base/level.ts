@@ -22,7 +22,7 @@ class Level {
     walkHint: Mesh | null = null;
     walkStage: number = -1;
     route: Vector3[] = [];
-    controlList: DragControls[] = [];
+    uniteDragControl: DragControls | undefined;
     allCubes: any[] = [];
     mirror: Mirror | undefined;
     level: number;
@@ -60,8 +60,10 @@ class Level {
             })
             this.setupPonder(this.startPos)
 
+            const dragObjs: any[] = []
+
             levelInfo.objects.forEach((v: any) => {
-                let tmpDrawbox: DrawBox, tmpDragControl: DragControls
+                let tmpDrawbox: DrawBox
                 let obj: any
                 switch (v.type) {
                     case "Cube":
@@ -73,11 +75,10 @@ class Level {
                         this.scene.add(new Plane(v.pos, v.color).obj)
                         break
                     case "Drawbox":
-                        tmpDrawbox = new DrawBox(v.pos, v.size, v.color)
+                        tmpDrawbox = new DrawBox(v.pos, v.size, v.range, v.color)
                         this.scene.add(tmpDrawbox)
                         this.allCubes.push(tmpDrawbox)
-                        tmpDragControl = new DragControls(tmpDrawbox.children, this.camera, this.renderer.domElement)
-                        tmpDrawbox.setupController(tmpDragControl, v.range || [[1], [1], [1]])
+                        dragObjs.push(tmpDrawbox)
                         break
                     case "Rotator":
                         obj = new Rotator(v.pos, v.size, v.color, v.angle)
@@ -87,12 +88,29 @@ class Level {
                 }
             })
             if (levelInfo.mirror) {
-                this.mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size)
+                this.mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size, levelInfo.mirror.range)
                 this.mirror.setupMirrorCubes(this.allCubes, this.scene)
-                const mirrorDrag = new DragControls(this.mirror.children, this.camera, this.renderer.domElement)
-                this.mirror.setupController(mirrorDrag, levelInfo.mirror.range || [[1], [1], [1]])
                 this.scene.add(this.mirror)
+                dragObjs.push(...this.mirror.children)
             }
+
+            // Setup up united drag control
+            this.uniteDragControl = new DragControls(dragObjs, this.camera, this.renderer.domElement)
+            this.uniteDragControl.addEventListener("dragstart", (e) => {
+                const target = e.object.parent as any
+                if (target.onControlDragStart)
+                    target.onControlDragStart(e)
+            })
+            this.uniteDragControl.addEventListener("drag", (e) => {
+                const target = e.object.parent as any
+                if (target.onControlDrag)
+                    target.onControlDrag(e)
+            })
+            this.uniteDragControl.addEventListener("dragend", (e) => {
+                const target = e.object.parent as any
+                if (target.onControlDragEnd)
+                    target.onControlDragEnd(e)
+            })
         }).catch((e) => {
             console.log("Cannot import level file!", e)
         })
@@ -173,12 +191,12 @@ class Level {
         this.disableControls()
     }
     enableControls() {
-        for (let i = 0; i < this.controlList.length; ++i)
-            this.controlList[i].enabled = true
+        if (this.uniteDragControl)
+            this.uniteDragControl.enabled = true
     }
     disableControls() {
-        for (let i = 0; i < this.controlList.length; ++i)
-            this.controlList[i].enabled = false
+        if (this.uniteDragControl)
+            this.uniteDragControl.enabled = false
     }
     nextStage(): Boolean {
         if (this.tingyun === null)

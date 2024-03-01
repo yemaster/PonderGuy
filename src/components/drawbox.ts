@@ -1,7 +1,6 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
 import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry } from "three"
-import { DragControls } from "three/examples/jsm/Addons.js"
 import { calcMirrorPos } from "@/base/methods"
 
 const calcPos = (p: number, l: number = 1): number => {
@@ -15,6 +14,7 @@ const fixPos = (p: number, l: number = 1): number => {
 class DrawBox extends Component {
     pos: [number, number, number];
     len: [number, number, number];
+    range: [number[], number[], number[]];
     mirrorInfo: { pos: [number, number, number], face: number } = { pos: [0, 0, 0], face: 0 }
 
     constructor(...args: any) {
@@ -23,10 +23,11 @@ class DrawBox extends Component {
         this.name = "Drawbox"
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 1]
+        this.range = args?.[2] || [[1], [1], [1]]
     }
 
     generateElement(...args: any): void {
-        this.generateDrawbox(args[0], args[1], args[2])
+        this.generateDrawbox(args[0], args[1], args[3])
     }
 
     generateDrawbox(pos: [number, number, number], len: [number, number, number], color: ColorRepresentation = 0xffe21f) {
@@ -50,51 +51,47 @@ class DrawBox extends Component {
         })
     }
 
-    setupController(controller: DragControls, range: number[][]) {
-        const _t = this
-        controller.addEventListener("drag", (e) => {
-            const tmp = e.object.position.toArray()
-            for (let i = 0; i < 3; ++i) {
-                if (range[i].length === 2) {
-                    if (tmp[i] <= calcPos(range[i][0], _t.len[i]))
-                        tmp[i] = calcPos(range[i][0], _t.len[i])
-                    if (tmp[i] >= calcPos(range[i][1], _t.len[i]))
-                        tmp[i] = calcPos(range[i][1], _t.len[i])
-                }
-                else
-                    tmp[i] = calcPos(_t.pos[i], _t.len[i])
+    onControlDrag(e: any) {
+        const tmp = e.object.position.toArray()
+        for (let i = 0; i < 3; ++i) {
+            if (this.range[i].length === 2) {
+                if (tmp[i] <= calcPos(this.range[i][0], this.len[i]))
+                    tmp[i] = calcPos(this.range[i][0], this.len[i])
+                if (tmp[i] >= calcPos(this.range[i][1], this.len[i]))
+                    tmp[i] = calcPos(this.range[i][1], this.len[i])
             }
-            e.object.position.fromArray(tmp)
+            else
+                tmp[i] = calcPos(this.pos[i], this.len[i])
+        }
+        e.object.position.fromArray(tmp)
 
-            if ((e.object?.parent as any)?.mirrorComponent) {
-                let tmpPos: [number, number, number] = [0, 0, 0]
-                for (let i = 0; i < tmpPos.length; ++i)
-                    tmpPos[i] = (tmp[i] - unitWidth * (_t.len[i] || 1) / 2) / unitWidth
+        if (this.mirrorComponent) {
+            let tmpPos: [number, number, number] = [0, 0, 0]
+            for (let i = 0; i < tmpPos.length; ++i)
+                tmpPos[i] = (tmp[i] - unitWidth * (this.len[i] || 1) / 2) / unitWidth
 
-                tmpPos = calcMirrorPos(tmpPos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
-                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face] - 1;
-                (e.object.parent as any).mirrorComponent.setPos(tmpPos)
-            }
-        })
-        controller.addEventListener("dragend", (e) => {
-            const tmp = e.object.position.toArray()
-            for (let i = 0; i < 3; ++i) {
-                _t.pos[i] = fixPos(tmp[i], _t.len[i])
-                tmp[i] = calcPos(_t.pos[i], _t.len[i])
-            }
-            e.object.position.fromArray(tmp)
-
-            if ((e.object?.parent as any)?.mirrorComponent) {
-                const tmpPos = calcMirrorPos(_t.pos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
-                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face] - 1;
-                (e.object.parent as any).mirrorComponent.setPos(tmpPos)
-            }
-        })
+            tmpPos = calcMirrorPos(tmpPos, this.mirrorInfo.pos, this.mirrorInfo.face)
+            tmpPos[this.mirrorInfo.face] -= this.len[this.mirrorInfo.face] - 1;
+            this.mirrorComponent.setPos(tmpPos)
+        }
     }
 
-    onClickEnd() {
-        //
+    onControlDragEnd(e: any) {
+        const tmp = e.object.position.toArray()
+        for (let i = 0; i < 3; ++i) {
+            this.pos[i] = fixPos(tmp[i], this.len[i])
+            tmp[i] = calcPos(this.pos[i], this.len[i])
+        }
+        e.object.position.fromArray(tmp)
+
+        if (this.mirrorComponent) {
+            const tmpPos = calcMirrorPos(this.pos, this.mirrorInfo.pos, this.mirrorInfo.face)
+            tmpPos[this.mirrorInfo.face] -= this.len[this.mirrorInfo.face] - 1;
+            this.mirrorComponent.setPos(tmpPos)
+        }
     }
+
+    onDragEnd() { }
 }
 
 export default DrawBox

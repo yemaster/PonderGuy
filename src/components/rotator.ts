@@ -85,7 +85,7 @@ class Rotator extends Component {
         //this.add(plane)
     }
 
-    onClickStart(raycaster: Raycaster) {
+    onDragStart(raycaster: Raycaster) {
         if (!this.enabled)
             return
         const pos = new Vector3()
@@ -93,7 +93,7 @@ class Rotator extends Component {
         this.startVector = pos.sub({ x: calcPos(this.pos[0]), y: calcPos(this.pos[1]), z: calcPos(this.pos[2]) })
     }
 
-    onClick(raycaster: Raycaster) {
+    onDrag(raycaster: Raycaster) {
         if (!this.enabled)
             return
         if (this.startVector === null)
@@ -122,7 +122,7 @@ class Rotator extends Component {
         }
     }
 
-    onClickEnd(raycaster: Raycaster) {
+    onDragEnd(raycaster: Raycaster) {
         if (!this.enabled)
             return
         if (this.startVector === null)

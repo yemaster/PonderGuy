@@ -4,12 +4,12 @@ import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import { PlaneGeometry, MeshBasicMaterial, Mesh, Scene, Vector3, Plane } from "three"
 import Component from "@/base/component"
-import { DragControls } from "three/examples/jsm/Addons.js"
 import { calcPos, fixPos, calcMirrorPos, calcMirrorAngle } from "@/base/methods"
 
 export default class Mirror extends Component {
     pos: [number, number, number];
     len: [number, number, number];
+    range: [number[], number[], number[]];
     inMirrorObjs: any[] = [];
     realObjs: any[] = [];
     clippingPlanes: Plane[] = [];
@@ -20,6 +20,7 @@ export default class Mirror extends Component {
         this.name = "Mirror"
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 0]
+        this.range = args?.[2] || [[1], [1], [1]]
     }
 
     generateElement(...args: any): void {
@@ -114,36 +115,33 @@ export default class Mirror extends Component {
         })
     }
 
-    setupController(controller: DragControls, range: number[][]) {
-        controller.addEventListener("drag", (e) => {
-            const tmp = e.object.position.toArray()
-            for (let i = 0; i < 3; ++i) {
-                if (range[i].length === 2) {
-                    if (tmp[i] <= calcPos(range[i][0], this.len[i]))
-                        tmp[i] = calcPos(range[i][0], this.len[i], this.len[i] === 0)
-                    if (tmp[i] >= calcPos(range[i][1], this.len[i]))
-                        tmp[i] = calcPos(range[i][1], this.len[i], this.len[i] === 0)
-                }
-                else
-                    tmp[i] = calcPos(this.pos[i], this.len[i], this.len[i] === 0)
+    onControlDrag(e: any) {
+        const tmp = e.object.position.toArray()
+        for (let i = 0; i < 3; ++i) {
+            if (this.range[i].length === 2) {
+                if (tmp[i] <= calcPos(this.range[i][0], this.len[i]))
+                    tmp[i] = calcPos(this.range[i][0], this.len[i], this.len[i] === 0)
+                if (tmp[i] >= calcPos(this.range[i][1], this.len[i]))
+                    tmp[i] = calcPos(this.range[i][1], this.len[i], this.len[i] === 0)
             }
-            e.object.position.fromArray(tmp)
-            this.handleObjectVisibility()
-        })
-        controller.addEventListener("dragend", (e) => {
-            const tmp = e.object.position.toArray()
-            for (let i = 0; i < 3; ++i) {
-                this.pos[i] = fixPos(tmp[i], this.len[i])
+            else
                 tmp[i] = calcPos(this.pos[i], this.len[i], this.len[i] === 0)
-            }
-            e.object.position.fromArray(tmp)
-            this.handleObjectVisibility()
-        })
+        }
+        e.object.position.fromArray(tmp)
+        this.handleObjectVisibility()
     }
 
-    onClickEnd() {
-        //
+    onControlDragEnd(e: any) {
+        const tmp = e.object.position.toArray()
+        for (let i = 0; i < 3; ++i) {
+            this.pos[i] = fixPos(tmp[i], this.len[i])
+            tmp[i] = calcPos(this.pos[i], this.len[i], this.len[i] === 0)
+        }
+        e.object.position.fromArray(tmp)
+        this.handleObjectVisibility()
     }
+
+    onClickEnd() { }
 
     setupMirrorCubes(objs: any[], scene: Scene) {
         const face = this.len[0] === 0 ? 0 : 2

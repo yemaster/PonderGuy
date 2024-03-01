@@ -83,8 +83,8 @@ const setPickPosition = (e: MouseEvent) => {
         }
         else {
             if (chosenObject && nowLevel.animateProgress === -1) {
-                if (chosenObject.onClick)
-                    chosenObject.onClick(picker.raycaster, picker.pickedObjectPoint)
+                if (chosenObject.onDrag)
+                    chosenObject.onDrag(picker.raycaster, picker.pickedObjectPoint)
             }
         }
         originPosition.x = e.clientX
@@ -161,8 +161,8 @@ const setupScene = () => {
             const p = picker.pickedObject.parent
             if (p && p.type === 'Group' && p.movable) {
                 chosenObject = p
-                if (p.onClickStart)
-                    p.onClickStart(picker.raycaster, picker.pickedObjectPoint)
+                if (p.onDragStart)
+                    p.onDragStart(picker.raycaster, picker.pickedObjectPoint)
             }
         }
     })
@@ -170,8 +170,8 @@ const setupScene = () => {
     canvas.addEventListener("mouseup", () => {
         isPress = false
         if (chosenObject && nowLevel.animateProgress === -1) {
-            if (chosenObject.onClickEnd) {
-                chosenObject.onClickEnd(picker.raycaster, picker.pickedObjectPoint)
+            if (chosenObject.onDragEnd) {
+                chosenObject.onDragEnd(picker.raycaster, picker.pickedObjectPoint)
                 const route = nowLevel.check()
                 if (route !== null)
                     nowLevel.walkRoute(route)
