@@ -1,10 +1,11 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
-import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry, Raycaster, Plane, OrthographicCamera, PerspectiveCamera, Vector3 } from "three"
+import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry } from "three"
 import { DragControls } from "three/examples/jsm/Addons.js"
+import { calcMirrorPos } from "@/base/methods"
 
 const calcPos = (p: number, l: number = 1): number => {
-    return (p || 0) * unitWidth + unitWidth * (l || 1) / 2
+    return p * unitWidth + unitWidth * (l || 1) / 2
 }
 
 const fixPos = (p: number, l: number = 1): number => {
@@ -12,10 +13,9 @@ const fixPos = (p: number, l: number = 1): number => {
 }
 
 class DrawBox extends Component {
-    pos: number[];
-    len: number[];
-    plane: Plane;
-    worldPosition: Vector3;
+    pos: [number, number, number];
+    len: [number, number, number];
+    mirrorInfo: { pos: [number, number, number], face: number } = { pos: [0, 0, 0], face: 0 }
 
     constructor(...args: any) {
         super(...args)
@@ -23,15 +23,13 @@ class DrawBox extends Component {
         this.name = "Drawbox"
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 1]
-        this.plane = new Plane()
-        this.worldPosition = new Vector3()
     }
 
     generateElement(...args: any): void {
         this.generateDrawbox(args[0], args[1], args[2])
     }
 
-    generateDrawbox(pos: number[], len: number[], color: ColorRepresentation = 0xffe21f) {
+    generateDrawbox(pos: [number, number, number], len: [number, number, number], color: ColorRepresentation = 0xffe21f) {
         const geometry = new BoxGeometry(unitWidth * (len[0] || 1), unitWidth * (len[1] || 1), unitWidth * (len[2] || 1))
         const material = new MeshLambertMaterial({ color })
         const drawbox = new Mesh(geometry, material)
@@ -43,32 +41,58 @@ class DrawBox extends Component {
         this.add(drawbox)
     }
 
+    setPos(pos: [number, number, number]) {
+        this.pos = pos
+        this.children.forEach(e => {
+            e.position.x = calcPos(pos[0], this.len[0])
+            e.position.y = calcPos(pos[1], this.len[1])
+            e.position.z = calcPos(pos[2], this.len[2])
+        })
+    }
+
     setupController(controller: DragControls, range: number[][]) {
+        const _t = this
         controller.addEventListener("drag", (e) => {
             const tmp = e.object.position.toArray()
             for (let i = 0; i < 3; ++i) {
                 if (range[i].length === 2) {
-                    if (tmp[i] <= calcPos(range[i][0], this.len[i]))
-                        tmp[i] = calcPos(range[i][0], this.len[i])
-                    if (tmp[i] >= calcPos(range[i][1], this.len[i]))
-                        tmp[i] = calcPos(range[i][1], this.len[i])
+                    if (tmp[i] <= calcPos(range[i][0], _t.len[i]))
+                        tmp[i] = calcPos(range[i][0], _t.len[i])
+                    if (tmp[i] >= calcPos(range[i][1], _t.len[i]))
+                        tmp[i] = calcPos(range[i][1], _t.len[i])
                 }
                 else
-                    tmp[i] = calcPos(this.pos[i], this.len[i])
+                    tmp[i] = calcPos(_t.pos[i], _t.len[i])
             }
             e.object.position.fromArray(tmp)
+
+            if (e.object?.parent?.mirrorComponent) {
+                let tmpPos: [number, number, number] = [0, 0, 0]
+                for (let i = 0; i < tmpPos.length; ++i)
+                    tmpPos[i] = (tmp[i] - unitWidth * (_t.len[i] || 1) / 2) / unitWidth
+
+                tmpPos = calcMirrorPos(tmpPos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
+                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face]
+                e.object.parent.mirrorComponent.setPos(tmpPos)
+            }
         })
         controller.addEventListener("dragend", (e) => {
             const tmp = e.object.position.toArray()
             for (let i = 0; i < 3; ++i) {
-                this.pos[i] = fixPos(tmp[i], this.len[i])
-                tmp[i] = calcPos(this.pos[i], this.len[i])
+                _t.pos[i] = fixPos(tmp[i], _t.len[i])
+                tmp[i] = calcPos(_t.pos[i], _t.len[i])
             }
             e.object.position.fromArray(tmp)
+
+            if (e.object?.parent?.mirrorComponent) {
+                const tmpPos = calcMirrorPos(_t.pos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
+                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face]
+                e.object.parent.mirrorComponent.setPos(tmpPos)
+            }
         })
     }
 
-    onClickEnd(raycaster: Raycaster) {
+    onClickEnd() {
         //
     }
 }

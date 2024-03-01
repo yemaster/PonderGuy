@@ -10,7 +10,7 @@ class Plane {
 
         this.obj.rotation.x = -0.5 * Math.PI
         this.obj.position.x = (pos[0] || 0) + 100
-        this.obj.position.y = 0
+        this.obj.position.y = pos[1]
         this.obj.position.z = (pos[2] || 0) + 100
     }
 

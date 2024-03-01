@@ -1,6 +1,6 @@
 import Component from "@/base/component"
-import { unitWidth } from "@/base/constants"
-import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4, Vector3 } from "three"
+import { unitWidth, cubeNewIndices } from "@/base/constants"
+import { BoxGeometry, Mesh, MeshLambertMaterial, DoubleSide, type ColorRepresentation, Matrix4, Vector3 } from "three"
 
 class Cube extends Component {
     pos: Vector3;
@@ -14,6 +14,9 @@ class Cube extends Component {
     }
     generateCube(pos: number[], color: ColorRepresentation = 0x54c8ff) {
         const cubeGeometry = new BoxGeometry(unitWidth, unitWidth, unitWidth)
+        cubeGeometry.index.set(cubeNewIndices)
+        cubeGeometry.index.needsUpdate = true
+        
         const cubeMaterial = new MeshLambertMaterial({ color })
         const cube = new Mesh(cubeGeometry, cubeMaterial)
 

@@ -105,13 +105,13 @@ clearPickPosition()
 window.addEventListener('mousemove', setPickPosition)
 window.addEventListener('mouseout', clearPickPosition)
 window.addEventListener('mouseleave', clearPickPosition)
-window.addEventListener('touchstart', (e: TouchEvent) => {
+/*window.addEventListener('touchstart', (e: TouchEvent) => {
     e.preventDefault()
     setPickPosition(e.touches[0])
 }, { passive: false })
 window.addEventListener('touchmove', (e: TouchEvent) => {
     setPickPosition(e.touches[0])
-})
+})*/
 window.addEventListener('touchend', clearPickPosition)
 
 // Hanlde canvas resize event
@@ -145,6 +145,8 @@ const setupScene = () => {
         antialias: true,
         alpha: true,
     })
+    renderer.localClippingEnabled = true
+    
     nowLevel = new Level(levelId.value, scene, camera, renderer)
 
     //const oc = new OrbitControls(camera, renderer.domElement)
@@ -229,14 +231,16 @@ const setupScene = () => {
     setTimeout(() => {
         levelShow.value.style.top = "50%"
         levelShow.value.style.opacity = "1"
-    }, 200)
+    }, 0) // 200
 
     setTimeout(() => {
         fog.value.style.opacity = "0"
         levelShow.value.style.opacity = "0"
         fog.value.style.visibility = "hidden"
-    }, 2200)
+    }, 0) // 2200
 }
+//const axesHelper = new THREE.AxesHelper(100)
+//scene.add(axesHelper)
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))

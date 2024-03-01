@@ -23,6 +23,7 @@ class Level {
     walkStage: number = -1;
     route: Vector3[] = [];
     controlList: DragControls[] = [];
+    allCubes: any[] = [];
     level: number;
     constructor(level: number, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer) {
         this.level = level
@@ -46,16 +47,19 @@ class Level {
 
             this.startPos = new Vector3().fromArray(levelInfo.start)
             this.destPos = []
-            levelInfo.dests.forEach(v => {
+            levelInfo.dests.forEach((v: number[]) => {
                 this.destPos.push(new Vector3().fromArray(v))
             })
             this.setupPonder(this.startPos)
 
-            levelInfo.objects.forEach(v => {
+            levelInfo.objects.forEach((v: any) => {
                 let tmpDrawbox: DrawBox, tmpDragControl: DragControls
+                let obj: any
                 switch (v.type) {
                     case "Cube":
-                        this.scene.add(new Cube(v.pos, v.color))
+                        obj = new Cube(v.pos, v.color)
+                        this.scene.add(obj)
+                        this.allCubes.push(obj)
                         break
                     case "Plane":
                         this.scene.add(new Plane(v.pos, v.color).obj)
@@ -63,14 +67,25 @@ class Level {
                     case "Drawbox":
                         tmpDrawbox = new DrawBox(v.pos, v.size, v.color)
                         this.scene.add(tmpDrawbox)
+                        this.allCubes.push(tmpDrawbox)
                         tmpDragControl = new DragControls(tmpDrawbox.children, this.camera, this.renderer.domElement)
                         tmpDrawbox.setupController(tmpDragControl, v.range || [[1], [1], [1]])
                         break
                     case "Rotator":
-                        this.scene.add(new Rotator(v.pos, v.size, v.color))
+                        obj = new Rotator(v.pos, v.size, v.color, v.angle)
+                        this.scene.add(obj)
+                        this.allCubes.push(obj)
+                        break
                 }
             })
-        }).catch(e => {
+            if (levelInfo.mirror) {
+                const mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size)
+                mirror.setupMirrorCubes(this.allCubes, this.scene)
+                const mirrorDrag = new DragControls(mirror.children, this.camera, this.renderer.domElement)
+                mirror.setupController(mirrorDrag, levelInfo.mirror.range || [[1], [1], [1]])
+                this.scene.add(mirror)
+            }
+        }).catch((E) => {
             console.log("Cannot import level file!")
         })
     }

@@ -2,7 +2,7 @@ import { Object3D, type Object3DEventMap, Raycaster, type Scene, type Vector2, t
 
 class Picker {
     raycaster: Raycaster;
-    pickedObject: Object3D<Object3DEventMap> | undefined = undefined;
+    pickedObject: any = undefined;
     pickedObjectSavedColor = 0;
     pickedObjectPoint: Vector3 | undefined = undefined;
     constructor() {

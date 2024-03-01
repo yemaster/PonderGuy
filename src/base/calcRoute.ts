@@ -81,7 +81,7 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
     })
 
     const points: Point[] = []
-    let st = 0, ed = 0
+    let st = -1, ed = -1
     const startPoint = new Point().fromVector3(start),
         endPoint = new Point().fromVector3(end)
     const addPoint = (p: Point) => {
@@ -118,7 +118,10 @@ export default function calcRoute(scene: Scene, start: Vector3, end: Vector3): V
             addPoint(new Point().fromArray(tmpPoint[i]))
         }
     }
-    //console.log(st, ed, points)
+    if (st === -1)
+        return null
+    if (ed === -1)
+        return null
     const edges = new Array(points.length)
     for (let i = 0; i < edges.length; ++i)
         edges[i] = []
