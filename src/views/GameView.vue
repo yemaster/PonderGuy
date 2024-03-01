@@ -233,7 +233,7 @@ const setupScene = () => {
     setTimeout(() => {
         levelShow.value.style.top = "50%"
         levelShow.value.style.opacity = "1"
-    }, 0) // 200
+    }, 0)
 
     setTimeout(() => {
         fog.value.style.opacity = "0"
@@ -241,8 +241,8 @@ const setupScene = () => {
         fog.value.style.visibility = "hidden"
     }, 0) // 2200
 }
-//const axesHelper = new THREE.AxesHelper(100)
-//scene.add(axesHelper)
+const axesHelper = new THREE.AxesHelper(100)
+scene.add(axesHelper)
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))

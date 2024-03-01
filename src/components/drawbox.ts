@@ -72,7 +72,7 @@ class DrawBox extends Component {
                     tmpPos[i] = (tmp[i] - unitWidth * (_t.len[i] || 1) / 2) / unitWidth
 
                 tmpPos = calcMirrorPos(tmpPos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
-                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face];
+                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face] - 1;
                 (e.object.parent as any).mirrorComponent.setPos(tmpPos)
             }
         })
@@ -86,7 +86,7 @@ class DrawBox extends Component {
 
             if ((e.object?.parent as any)?.mirrorComponent) {
                 const tmpPos = calcMirrorPos(_t.pos, _t.mirrorInfo.pos, _t.mirrorInfo.face)
-                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face];
+                tmpPos[_t.mirrorInfo.face] -= _t.len[_t.mirrorInfo.face] - 1;
                 (e.object.parent as any).mirrorComponent.setPos(tmpPos)
             }
         })

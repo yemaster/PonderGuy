@@ -1,17 +1,30 @@
 {
     "background": "#feffbd",
-    "start": [2, 0, 2],
-    "dests": [[-2, 0, 1]],
+    "start": [-2, 1, 7],
+    "dests": [[4, 1, -2], [11, 3, 6]],
     "objects": [
-        { "type": "Cube", "pos": [-2, 0, 1] },
-        { "type": "Cube", "pos": [2, 0, 2] },
-        { "type": "Drawbox", "pos": [5, 0, 1], "size": [4, 1, 1], "range":[[0, 5], [1], [1]] },
-        { "type": "Rotator", "pos": [1, 0, -4], "size": 5 }
+        { "type": "Cube", "pos": [0, 0, 4] },
+        { "type": "Cube", "pos": [0, 0, 5] },
+        { "type": "Cube", "pos": [0, 0, 6] },
+        { "type": "Cube", "pos": [0, 0, 7] },
+        { "type": "Cube", "pos": [-1, 0, 7] },
+        { "type": "Cube", "pos": [-2, 0, 7] },
+        { "type": "Cube", "pos": [-1, 1, 7] },
+        { "type": "Cube", "pos": [-2, 1, 7] },
+        { "type": "Cube", "pos": [4, 0, 4] },
+        { "type": "Cube", "pos": [4, -1, 4] },
+        { "type": "Cube", "pos": [10, 3, 6] },
+        { "type": "Cube", "pos": [11, 3, 6] },
+        { "type": "Cube", "pos": [11, 2, 6] },
+        { "type": "Cube", "pos": [11, 1, 6] },
+        { "type": "Cube", "pos": [4, 1, -1] },
+        { "type": "Cube", "pos": [4, 1, -2] },
+        { "type": "Drawbox", "pos": [0, 1, 1], "size": [1, 1, 4], "range": [[1], [1], [1, 4]] },
+        { "type": "Rotator", "pos": [4, 1, 4], "size": 4 }
     ],
     "mirror": {
-        "pos": [0, 0, 5],
-        "size": [0, 10, 5],
-        "face": "x",
-        "range": [[1], [1], [-20, 20]]
+        "pos": [-4, -3, 1],
+        "size": [7, 15, 0],
+        "range": [[-4, 10], [1], [1]]
     }
 }

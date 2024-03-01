@@ -65,8 +65,8 @@ export default class Mirror extends Component {
             new Plane().setFromNormalAndCoplanarPoint(
                 (face === 2) ? new Vector3(0, 0, -1) : new Vector3(-1, 0, 0),
                 (face === 2) ?
-                    new Vector3(0, 0, this.pos[2] * unitWidth / 2) :
-                    new Vector3(this.pos[0] * unitWidth / 2, 0, 0)),
+                    new Vector3(0, 0, this.pos[2] * unitWidth) :
+                    new Vector3(this.pos[0] * unitWidth, 0, 0)),
             // Left
             new Plane().setFromNormalAndCoplanarPoint(
                 (face === 2) ? new Vector3(1, 0, -1) : new Vector3(-1, 0, 1),
@@ -151,36 +151,35 @@ export default class Mirror extends Component {
         objs.forEach(v => {
             let tmpObj: any
             let tmpPos: [number, number, number]
-            if (v.pos[face] >= this.pos[face])
-                switch (v.name) {
-                    case "Cube":
-                        tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face))
-                        this.inMirrorObjs.push(tmpObj)
-                        scene.add(tmpObj)
-                        break
-                    case "Rotator":
-                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, undefined, calcMirrorAngle(v.angle, face))
-                        tmpObj.enabled = false
-                        v.mirrorComponent = tmpObj
-                        v.mirrorInfo = {
-                            face
-                        }
-                        this.inMirrorObjs.push(tmpObj)
-                        scene.add(tmpObj)
-                        break
-                    case "Drawbox":
-                        tmpPos = calcMirrorPos(v.pos, this.pos, face)
-                        tmpPos[face] -= v.len[face]
-                        tmpObj = new DrawBox(tmpPos, v.len, undefined)
-                        v.mirrorComponent = tmpObj
-                        v.mirrorInfo = {
-                            pos: this.pos,
-                            face
-                        }
-                        this.inMirrorObjs.push(tmpObj)
-                        scene.add(tmpObj)
-                        break
-                }
+            switch (v.name) {
+                case "Cube":
+                    tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face))
+                    this.inMirrorObjs.push(tmpObj)
+                    scene.add(tmpObj)
+                    break
+                case "Rotator":
+                    tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, undefined, calcMirrorAngle(v.angle, face))
+                    tmpObj.enabled = false
+                    v.mirrorComponent = tmpObj
+                    v.mirrorInfo = {
+                        face
+                    }
+                    this.inMirrorObjs.push(tmpObj)
+                    scene.add(tmpObj)
+                    break
+                case "Drawbox":
+                    tmpPos = calcMirrorPos(v.pos, this.pos, face)
+                    tmpPos[face] -= v.len[face] - 1
+                    tmpObj = new DrawBox(tmpPos, v.len, undefined)
+                    v.mirrorComponent = tmpObj
+                    v.mirrorInfo = {
+                        pos: this.pos,
+                        face
+                    }
+                    this.inMirrorObjs.push(tmpObj)
+                    scene.add(tmpObj)
+                    break
+            }
         })
         this.handleObjectVisibility()
     }

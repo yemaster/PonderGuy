@@ -42,7 +42,11 @@ function getVirtualPos(arr: any[]) {
             //console.log(v)
             switch (v.name) {
                 case "Cube":
-                    res.push(v.pos)
+                    res.push([
+                        v.pos[0],
+                        v.pos[1],
+                        v.pos[2]
+                    ])
                     break
                 case "Drawbox":
                     for (let i = 0; i < v.len[0]; ++i)
@@ -86,31 +90,41 @@ function getVirtualPos(arr: any[]) {
 
 function filterObjs(pos: [number, number, number, number?][], mPos: [number, number, number], mLen: [number, number, number], type: number = 1) {
     const face = mLen[0] === 0 ? 0 : 2
-    const left = (face === 2) ? (-mPos[0] - 1) : (mPos[2] + mLen[2] - 1)
-    const right = (face === 2) ? (-mPos[0] - mLen[0] + 1) : (mPos[2] + 1)
-    const bottom = -mPos[1]
-    const top = -mPos[1] - mLen[1] + 1
+    // face = 2
+    // left bottom corner: (mPos[0],mPos[1],mPos[2]) x+1
+    // right top corner:   (mPos[0]+mLen[0],mPos[1]+mLen[1],mPos[2]) x-1 y-1
+
+    // face = 0
+    // left bottom corner: (mPos[0],mPos[1],mPos[2]+mLen[2]) z-1
+    // right top corner:   (mPos[0],mPos[1]+mLen[1],mPos[2]) y-1 z+1
+
+    // left < right, bottom < top
+    const left = (face === 2) ? (mPos[2] - mPos[0] - mLen[0] + 1) : (mPos[2] - mPos[0] + 1)
+    const right = (face === 2) ? (mPos[2] - mPos[0] - 1) : (mPos[2] + mLen[2] - mPos[0] - 1)
+    const bottom = (face === 2) ? (mPos[2] - mPos[1] - mLen[1] + 1) : (mPos[0] - mPos[1] - mLen[1] + 1)
+    const top = (face === 2) ? (mPos[2] - mPos[1]) : (mPos[0] - mPos[1])
 
     pos.forEach(v => {
         let res = 0
         // 0 Whole, 1: Left, 2: Right, 3: Hidden
         const x = v[2] - v[1], y = v[0] - v[1]
-        const row = x - y, col = y
+        const row = x - y, col = (face === 2) ? x : y
 
         if (v[face] >= mPos[face])
             res = 0
-        else if (col <= bottom && col >= top) {
-            if (row <= left && row >= right)
+        else if (bottom <= col && col <= top) {
+            if (left <= row && row <= right)
                 res = 3
-            else if (row === left + 1)
-                res = 1
-            else if (row + 1 === right)
+            else if (row + 1 === left)
                 res = 2
+            else if (row === right + 1)
+                res = 1
             else
                 res = 0
         }
         else
             res = 0
+        //console.log(row === right + 1, res)
 
         if (type !== 1)
             res = 3 - res
@@ -120,7 +134,7 @@ function filterObjs(pos: [number, number, number, number?][], mPos: [number, num
         else
             v.push(res)
 
-        //console.log(row, col, left, right, bottom, top, res)
+        //console.log(v, mPos, [x, y], [row, col], [left, right, bottom, top], res)
     })
 }
 
@@ -147,6 +161,8 @@ export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [num
         }
     }
 
+    //console.log(levelObjs.objs)
+
     if (levelObjs.mirror !== undefined) {
         filterObjs(realPoints, levelObjs.mirror.pos, levelObjs.mirror.len, 1)
         const mirrorPoints: [number, number, number, number?][] = getVirtualPos(levelObjs.mirror.objs)
@@ -160,15 +176,19 @@ export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [num
     const tmp = []
     for (let i = 0; i < realPoints.length; ++i) {
         let flag = true
+        const s1 = realPoints[i][3] || 0
+        if (s1 === 3)
+            continue
         for (let j = 0; j < realPoints.length; ++j) {
-            const d1x = realPoints[i][0] - realPoints[i][1]
-            const d1y = realPoints[i][2] - realPoints[i][1]
-            const d2x = realPoints[j][0] - realPoints[j][1]
-            const d2y = realPoints[j][2] - realPoints[j][1]
+            const d1x = realPoints[i][0] - realPoints[i][1] // -2
+            const d1y = realPoints[i][2] - realPoints[i][1] // -3
+            const d2x = realPoints[j][0] - realPoints[j][1] // -3
+            const d2y = realPoints[j][2] - realPoints[j][1] // -3
+            const s2 = realPoints[j][3] || 0
             if (realPoints[j][1] > realPoints[i][1] &&
-                (((d1x === d2x) && (d1y === d2y + 1)) ||
-                    ((d1x === d2x + 1) && (d1y === d2y)) ||
-                    ((d1x === d2x + 1) && (d1y === d2y + 1)))) {
+                (((d1x === d2x) && (d1y === d2y + 1) && (s2 <= 1) && (s1 !== 1)) ||   // 从右上遮住
+                    ((d1x === d2x + 1) && (d1y === d2y) && ((s2 & 1) === 0) && (s1 !== 2)) ||  // 从左上遮住
+                    ((d1x === d2x + 1) && (d1y === d2y + 1) && (s2 < 3) && ((s2 === 0) || (s2 === s1))))) {     // 从正上方遮住
                 flag = false
                 break
             }
@@ -178,18 +198,18 @@ export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [num
         }
     }
     // Handle Mirror
-    for (let i = 0; i < realPoints.length; ++i) {
+    for (let i = 0; i < tmp.length; ++i) {
         let flag = false
-        const status = realPoints[i][3] || 0
+        const status = tmp[i][3] || 0
         // Skip hidden cubes
         if (status === 3)
             continue
         else if (status > 0) {
             // Find another part
-            for (let j = 0; j < realPoints.length; ++j)
-                if (((realPoints[j][3] || 0) + status === 3) &&
-                    (realPoints[j][2] - realPoints[j][1] === realPoints[i][2] - realPoints[i][1]) &&
-                    (realPoints[j][0] - realPoints[j][1] === realPoints[i][0] - realPoints[i][1])) {
+            for (let j = 0; j < tmp.length; ++j)
+                if (((tmp[j][3] || 0) + status === 3) &&
+                    (tmp[j][2] - tmp[j][1] === tmp[i][2] - tmp[i][1]) &&
+                    (tmp[j][0] - tmp[j][1] === tmp[i][0] - tmp[i][1])) {
                     flag = true
                     break
                 }
@@ -197,8 +217,9 @@ export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [num
         else
             flag = true
         if (flag)
-            addPoint(new Point().fromArray(realPoints[i]))
+            addPoint(new Point().fromArray(tmp[i]))
     }
+    //console.log(st, ed, points)
     if (st === -1)
         return null
     if (ed === -1)
