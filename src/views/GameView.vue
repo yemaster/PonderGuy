@@ -149,6 +149,7 @@ const setupScene = () => {
     renderer.localClippingEnabled = true
     
     nowLevel = new Level(levelId.value, scene, camera, renderer)
+    picker.updateObjs(scene.children)
 
     const oc = new OrbitControls(camera, renderer.domElement)
     oc.enableRotate = false

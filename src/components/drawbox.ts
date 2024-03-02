@@ -54,9 +54,12 @@ class DrawBox extends Component {
     setSize(size: [number, number, number]) {
         this.len = size
         this.children.forEach(e => {
-            e.position.x = calcPos(this.pos[0], size[0])
-            e.position.y = calcPos(this.pos[1], size[1])
-            e.position.z = calcPos(this.pos[2], size[2])
+            const t = e as Mesh
+            t?.geometry.dispose()
+            t.geometry = new BoxGeometry(unitWidth * (size[0] || 1), unitWidth * (size[1] || 1), unitWidth * (size[2] || 1))
+            t.position.x = calcPos(this.pos[0], size[0])
+            t.position.y = calcPos(this.pos[1], size[1])
+            t.position.z = calcPos(this.pos[2], size[2])
         })
     }
 

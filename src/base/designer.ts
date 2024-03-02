@@ -16,10 +16,8 @@ export default class Designer {
     tingyun: Mesh[] = [];
     objects: any[] = [];
     ponder: Mesh | undefined;
-    drawObjs: any[] = [];
     mirror: Mirror | undefined;
 
-    dragControl: DragControls;
     constructor(scene: Scene, camera: OrthographicCamera, renderer: WebGLRenderer, startPos: [number, number, number]) {
         this.scene = scene
         this.camera = camera
@@ -27,8 +25,6 @@ export default class Designer {
 
         this.startPos = new Vector3().fromArray(startPos)
         this.setupPonder(this.startPos)
-
-        this.dragControl = new DragControls([], this.camera, this.renderer.domElement)
     }
 
     setupPonder(pos: Vector3) {
@@ -86,25 +82,6 @@ export default class Designer {
         )
     }
 
-    setupDragControl() {
-        this.dragControl = new DragControls(this.drawObjs, this.camera, this.renderer.domElement)
-        this.dragControl.addEventListener("dragstart", (e) => {
-            const target = e.object.parent as any
-            if (target.onControlDragStart)
-                target.onControlDragStart(e)
-        })
-        this.dragControl.addEventListener("drag", (e) => {
-            const target = e.object.parent as any
-            if (target.onControlDrag)
-                target.onControlDrag(e)
-        })
-        this.dragControl.addEventListener("dragend", (e) => {
-            const target = e.object.parent as any
-            if (target.onControlDragEnd)
-                target.onControlDragEnd(e)
-        })
-    }
-
     addNewObject(info: objectInfo, pos?: number) {
         if (pos && this.objects[pos] === undefined)
             return
@@ -118,7 +95,6 @@ export default class Designer {
             case "Drawbox":
                 tmpObj = new DrawBox(info.pos, info.size, info.range, info.color)
                 pos ? this.objects[pos] = tmpObj : this.objects.push(tmpObj)
-                this.drawObjs.push(tmpObj)
                 break
             case "Rotator":
                 tmpObj = new Rotator(info.pos, info.size, info.color, info.angle)
@@ -126,8 +102,6 @@ export default class Designer {
                 break
         }
         this.scene.add(tmpObj)
-        this.dragControl.dispose()
-        this.setupDragControl()
         if (this.mirror) {
             pos ? this.mirror.realObjs[pos] = tmpObj : this.mirror.realObjs.push(tmpObj)
             this.mirror.updateMirrorCubePos()
@@ -142,7 +116,6 @@ export default class Designer {
             this.mirror.updateMirrorCubePos()
         }
         const d = this.objects[p]
-        console.log("?", d)
         if (this.mirror && d.mirrorComponent) {
             this.mirror.inMirrorObjs.splice(this.mirror.inMirrorObjs.indexOf(d.mirrorComponent), 1)
             d.mirrorComponent.children.forEach((v: any) => {
@@ -150,14 +123,11 @@ export default class Designer {
             })
             this.scene.remove(d.mirrorComponent)
         }
-        this.drawObjs.splice(this.drawObjs.indexOf(d), 1)
         d.children.forEach((v: any) => {
             v.geometry?.dispose()
         })
         this.scene.remove(d)
         this.objects.splice(p, 1)
-        this.dragControl.dispose()
-        this.setupDragControl()
     }
 
     changeObjectInfo(p: number, info: objectInfo) {
@@ -165,7 +135,6 @@ export default class Designer {
             return
         const d = this.objects[p]
         if (d.name !== info.type) {
-            this.drawObjs.splice(this.drawObjs.indexOf(d), 1)
             d.children.forEach((v: any) => {
                 v.geometry?.dispose()
             })
@@ -193,9 +162,6 @@ export default class Designer {
         this.mirror = new Mirror(info.pos, info.size, info.range)
         this.mirror.setupMirrorCubes(Array.from(this.objects), this.scene)
         this.scene.add(this.mirror)
-        this.drawObjs.push(this.mirror)
-        this.dragControl.dispose()
-        this.setupDragControl()
     }
 
     changeMirrorInfo(info: MirrorInfo) {
@@ -211,12 +177,9 @@ export default class Designer {
 
     disposeMirror() {
         if (this.mirror) {
-            this.drawObjs.splice(this.drawObjs.indexOf(this.mirror), 1)
             this.mirror.dispose()
             this.scene.remove(this.mirror)
         }
         this.mirror = undefined
-        this.dragControl.dispose()
-        this.setupDragControl()
     }
 }

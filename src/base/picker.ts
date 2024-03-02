@@ -2,11 +2,16 @@ import { Object3D, type Object3DEventMap, Raycaster, type Scene, type Vector2, t
 
 class Picker {
     raycaster: Raycaster;
+    allObjs: any[];
     pickedObject: any = undefined;
     pickedObjectSavedColor = 0;
     pickedObjectPoint: Vector3 | undefined = undefined;
-    constructor() {
+    constructor(objs?: any[]) {
         this.raycaster = new Raycaster()
+        this.allObjs = objs || []
+    }
+    updateObjs(objs: any[]) {
+        this.allObjs = objs
     }
     pick(normalizedPosition: Vector2, scene: Scene, camera: OrthographicCamera | PerspectiveCamera) {
         if (this.pickedObject) {
@@ -15,7 +20,7 @@ class Picker {
         }
 
         this.raycaster.setFromCamera(normalizedPosition, camera)
-        const intersectedObjects = this.raycaster.intersectObjects(scene.children)
+        const intersectedObjects = this.raycaster.intersectObjects(this.allObjs, true)
         if (intersectedObjects.length) {
             this.pickedObject = intersectedObjects[0].object
             this.pickedObjectPoint = intersectedObjects[0].point
