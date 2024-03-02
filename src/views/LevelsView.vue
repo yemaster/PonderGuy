@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 // Axios
 import axios from 'axios'
+document.title = `关卡列表 | Ponder Guy`
 
 const route = useRoute()
 const router = useRouter()

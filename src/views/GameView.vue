@@ -18,6 +18,7 @@ import debounce from 'lodash.debounce'
 // Get level id
 let nowLevel: Level
 const levelId = ref(Number(route.params.id))
+document.title = `关卡#${levelId.value} | Ponder Guy`
 const fog = ref()
 const levelShow = ref()
 

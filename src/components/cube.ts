@@ -35,6 +35,12 @@ class Cube extends Component {
             e.position.z = calcPos(pos[2], 1)
         })
     }
+
+    setColor(color: string) {
+        this.children.forEach(v => {
+            (v as any)?.material?.color.setStyle(color)
+        })
+    }
 }
 (Cube as any).cnName = "正方体";
 (Cube as any).enName = "Cube";

@@ -1,7 +1,7 @@
 // Three.js & Core components
 import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry } from "three"
 import calcRoute from "@/base/calcRoute"
-import { unitWidth } from "./constants";
+import { unitWidth, type objectInfo } from "./constants";
 import Plane from "@/components/plane"
 import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
@@ -67,7 +67,7 @@ class Level {
 
             const dragObjs: any[] = []
 
-            levelInfo.objects.forEach((v: any) => {
+            levelInfo.objects.forEach((v: objectInfo) => {
                 let tmpDrawbox: DrawBox
                 let obj: any
                 switch (v.type) {

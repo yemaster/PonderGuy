@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 const cl = ref()
 const router = useRouter()
 
+document.title = "Ponder Guy"
+
 onMounted(() => {
     setTimeout(() => {
         cl.value.style.opacity = "1"

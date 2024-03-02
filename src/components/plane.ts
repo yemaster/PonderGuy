@@ -3,7 +3,7 @@ import { PlaneGeometry, Mesh, type ColorRepresentation, MeshLambertMaterial } fr
 class Plane {
     obj: Mesh;
 
-    constructor(pos: number[], color: ColorRepresentation = 0xeeeeee) {
+    constructor(pos: [number, number, number], color: ColorRepresentation = 0xeeeeee) {
         const geometry = new PlaneGeometry(200, 200)
         const material = new MeshLambertMaterial({ color })
         this.obj = new Mesh(geometry, material)

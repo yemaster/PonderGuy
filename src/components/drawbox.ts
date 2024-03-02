@@ -67,7 +67,7 @@ class DrawBox extends Component {
     onControlDrag(e: any) {
         const tmp = e.object.position.toArray()
         for (let i = 0; i < 3; ++i) {
-            if (this.range[i].length === 2) {
+            if (this.range[i].length === 2 && this.range[i][0] < this.range[i][1]) {
                 if (tmp[i] <= calcPos(this.range[i][0], this.len[i]))
                     tmp[i] = calcPos(this.range[i][0], this.len[i])
                 if (tmp[i] >= calcPos(this.range[i][1], this.len[i]))

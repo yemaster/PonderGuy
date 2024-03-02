@@ -1,22 +1,53 @@
 export const unitWidth = 12
 
-export type objectInfo = {
-    type: string,
-    pos?: [number, number, number],
-    size?: number | [number, number, number],
-    range?: [number[], number[], number[]],
-    angle?: number,
-    color?: string
+export type CubeInfo = {
+    type: "Cube";
+    pos: [number, number, number];
+    size?: never;
+    angle?: never;
+    range?: never;
+    color?: string;
+}
+
+export type DrawboxInfo = {
+    type: "Drawbox";
+    pos: [number, number, number];
+    size: [number, number, number];
+    angle?: never;
+    range: [number[], number[], number[]];
+    color?: string;
+}
+
+export type RotatorInfo = {
+    type: "Rotator";
+    pos: [number, number, number];
+    size: number;
+    angle: number;
+    range?: never;
+    color?: string;
+}
+
+export type PlaneInfo = {
+    type: "Plane";
+    pos: [number, number, number];
+    size?: never;
+    angle?: never;
+    range?: never;
+    color?: string;
+}
+
+export type objectInfo = CubeInfo | DrawboxInfo | RotatorInfo | PlaneInfo
+
+export type MirrorInfo = {
+    pos: [number, number, number],
+    size: [number, number, number],
+    range: [number[], number[], number[]]
 }
 
 export type levelData = {
     background: string,
-    start: [number, number, number],
-    dests: [number, number, number][],
-    objects: objectInfo[],
-    mirror?: {
-        pos: [number, number, number],
-        size: [number, number, number],
-        range: [number[], number[], number[]]
-    }
+    start: [number, number, number];
+    dests: [number, number, number][];
+    objects: objectInfo[];
+    mirror?: MirrorInfo;
 }

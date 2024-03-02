@@ -29,7 +29,7 @@ class Rotator extends Component {
     }
 
     setAngle(angle: number) {
-        this.angle = angle || 0
+        this.angle = (Math.floor(angle) || 0) % 4
         let rot: [number, number, number] = [0, 0, 0]
         switch (angle) {
             case 1:
@@ -53,7 +53,7 @@ class Rotator extends Component {
     setSize(len: number) {
         this.len = len
         const box1 = this.children[0] as Mesh
-        const box2 = this.children[0] as Mesh
+        const box2 = this.children[1] as Mesh
 
         box1.geometry.dispose()
         box1.geometry = new BoxGeometry(unitWidth * len, unitWidth, unitWidth)

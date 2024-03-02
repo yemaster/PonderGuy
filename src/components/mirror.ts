@@ -42,13 +42,101 @@ export default class Mirror extends Component {
         this.add(mirror)
     }
 
+    updateMirrorCubePos(s?: Scene) {
+        const scene = s || (this.parent as Scene)
+        const face = this.len[0] === 0 ? 0 : 2
+
+        this.realObjs.forEach((v: any) => {
+            let tmpObj: any
+            let tmpPos: [number, number, number]
+            if (v.mirrorComponent) {
+                switch (v.name) {
+                    case "Cube":
+                        v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
+                        break
+                    case "Drawbox":
+                        tmpPos = calcMirrorPos(v.pos, this.pos, face)
+                        tmpPos[face] -= v.len[face] - 1
+                        v.mirrorComponent.setPos(tmpPos)
+                        v.mirrorInfo = {
+                            pos: this.pos,
+                            face
+                        }
+                        break
+                    case "Rotator":
+                        v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
+                        v.mirrorComponent.setAngle(calcMirrorAngle(v.angle, face))
+                        v.mirrorInfo = {
+                            face
+                        }
+                        break
+                }
+            }
+            else {
+                switch (v.name) {
+                    case "Cube":
+                        tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face))
+                        v.mirrorComponent = tmpObj
+                        this.inMirrorObjs.push(tmpObj)
+                        scene.add(tmpObj)
+                        break
+                    case "Rotator":
+                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, undefined, calcMirrorAngle(v.angle, face))
+                        tmpObj.enabled = false
+                        v.mirrorComponent = tmpObj
+                        v.mirrorInfo = {
+                            face
+                        }
+                        this.inMirrorObjs.push(tmpObj)
+                        scene.add(tmpObj)
+                        break
+                    case "Drawbox":
+                        tmpPos = calcMirrorPos(v.pos, this.pos, face)
+                        tmpPos[face] -= v.len[face] - 1
+                        tmpObj = new DrawBox(tmpPos, v.len, undefined)
+                        v.mirrorComponent = tmpObj
+                        v.mirrorInfo = {
+                            pos: this.pos,
+                            face
+                        }
+                        this.inMirrorObjs.push(tmpObj)
+                        scene.add(tmpObj)
+                        break
+                }
+            }
+        })
+    }
+
     setPos(pos: [number, number, number]) {
         this.pos = pos
         this.children.forEach(e => {
-            e.position.x = calcPos(pos[0], this.len[0], this.len[0] === 0)
-            e.position.y = calcPos(pos[1], this.len[1])
-            e.position.z = calcPos(pos[2], this.len[2], this.len[2] === 0)
+            const t = e as Mesh
+            t.position.x = calcPos(pos[0], this.len[0], this.len[0] === 0)
+            t.position.y = calcPos(pos[1], this.len[1])
+            t.position.z = calcPos(pos[2], this.len[2], this.len[2] === 0)
         })
+        this.updateMirrorCubePos()
+        this.handleObjectVisibility()
+    }
+
+    setSize(size: [number, number, number]) {
+        this.len = size
+        this.children.forEach(e => {
+            const t = e as Mesh
+            if (t.geometry) {
+                t.geometry.dispose()
+                t.geometry = new PlaneGeometry(unitWidth * (size[0] + size[2]), unitWidth * (size[1] || 1))
+            }
+            t.position.x = calcPos(this.pos[0], size[0], size[0] === 0)
+            t.position.y = calcPos(this.pos[1], size[1])
+            t.position.z = calcPos(this.pos[2], size[2], size[2] === 0)
+        })
+        this.updateMirrorCubePos()
+        this.handleObjectVisibility()
+    }
+
+    setRange(range: [number[], number[], number[]]) {
+        this.range = range
     }
 
     handleObjectVisibility() {
@@ -118,7 +206,7 @@ export default class Mirror extends Component {
     onControlDrag(e: any) {
         const tmp = e.object.position.toArray()
         for (let i = 0; i < 3; ++i) {
-            if (this.range[i].length === 2) {
+            if (this.range[i].length === 2 && this.range[i][0] < this.range[i][1]) {
                 if (tmp[i] <= calcPos(this.range[i][0], this.len[i]))
                     tmp[i] = calcPos(this.range[i][0], this.len[i], this.len[i] === 0)
                 if (tmp[i] >= calcPos(this.range[i][1], this.len[i]))
@@ -144,41 +232,28 @@ export default class Mirror extends Component {
     onClickEnd() { }
 
     setupMirrorCubes(objs: any[], scene: Scene) {
-        const face = this.len[0] === 0 ? 0 : 2
         this.realObjs = objs
-        objs.forEach(v => {
-            let tmpObj: any
-            let tmpPos: [number, number, number]
-            switch (v.name) {
-                case "Cube":
-                    tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face))
-                    this.inMirrorObjs.push(tmpObj)
-                    scene.add(tmpObj)
-                    break
-                case "Rotator":
-                    tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, undefined, calcMirrorAngle(v.angle, face))
-                    tmpObj.enabled = false
-                    v.mirrorComponent = tmpObj
-                    v.mirrorInfo = {
-                        face
-                    }
-                    this.inMirrorObjs.push(tmpObj)
-                    scene.add(tmpObj)
-                    break
-                case "Drawbox":
-                    tmpPos = calcMirrorPos(v.pos, this.pos, face)
-                    tmpPos[face] -= v.len[face] - 1
-                    tmpObj = new DrawBox(tmpPos, v.len, undefined)
-                    v.mirrorComponent = tmpObj
-                    v.mirrorInfo = {
-                        pos: this.pos,
-                        face
-                    }
-                    this.inMirrorObjs.push(tmpObj)
-                    scene.add(tmpObj)
-                    break
+        this.updateMirrorCubePos(scene)
+        this.handleObjectVisibility()
+    }
+
+    dispose(s?: Scene) {
+        const scene = s || (this.parent as Scene)
+        this.inMirrorObjs.forEach((v: any) => {
+            if (v.geometry) {
+                v.geometry.dispose()
+            }
+            scene.remove(v)
+        })
+        this.inMirrorObjs = []
+        this.realObjs.forEach((v: any) => {
+            if (v.mirrorComponent)
+                v.mirrorComponent = undefined
+        })
+        this.children.forEach((v: any) => {
+            if (v.geometry) {
+                v.geometry.dispose()
             }
         })
-        this.handleObjectVisibility()
     }
 }
