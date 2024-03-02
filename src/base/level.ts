@@ -1,5 +1,5 @@
 // Three.js & Core components
-import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry } from "three"
+import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Matrix4, Euler } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth, type objectInfo } from "./constants";
 import Plane from "@/components/plane"
@@ -7,7 +7,7 @@ import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import Mirror from "@/components/mirror"
-import { DragControls } from "three/examples/jsm/Addons.js"
+import { DragControls, GLTFLoader } from "three/examples/jsm/Addons.js"
 
 // Axios
 import axios from 'axios'
@@ -20,7 +20,7 @@ class Level {
     startPos: Vector3 | undefined = undefined;
     destPos: Vector3[] = [];
     nowStage: number = 0;
-    ponder: Mesh | null = null;
+    ponder: Group | null = null;
     tingyun: Mesh | null = null;
     animateProgress: number = -1;
     walkHint: Mesh | null = null;
@@ -30,6 +30,7 @@ class Level {
     allCubes: any[] = [];
     mirror: Mirror | undefined;
     level: number;
+    animation!: { mixer: AnimationMixer, animations: { "Running": AnimationAction, "Standing": AnimationAction } };
     constructor(level: number, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer) {
         this.level = level
         this.scene = scene
@@ -121,17 +122,36 @@ class Level {
         })
     }
     setupPonder(pos: Vector3) {
+        const loader = new GLTFLoader()
+        loader.load("/ponder.glb", (gltf) => {
+            //console.log(gltf)
+            this.ponder = gltf.scene
+            //console.log(gltf.animations)
+            this.ponder.scale.set(22, 22, 22)
+            this.ponder.position.set(
+                pos.x * unitWidth + unitWidth / 2 + 100,
+                (pos.y + 1) * unitWidth + 100,
+                pos.z * unitWidth + unitWidth / 2 + 100
+            )
+            this.scene.add(this.ponder)
+
+            const mixer = new AnimationMixer(this.ponder)
+            this.animation = {
+                mixer,
+                animations: {
+                    Running: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Running")),
+                    Standing: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Standing")),
+                }
+            }
+            this.animation.animations.Running.play()
+            this.animation.animations.Running.weight = 0
+            this.animation.animations.Standing.play()
+            this.animation.animations.Standing.weight = 1
+            //console.log(this.scene)
+        })
         const ponderGeometry = new BoxGeometry(6, 12, 6)
-        const ponderMaterial = new MeshBasicMaterial({ color: 0x47af50 })
         const tingyunMaterial = new MeshBasicMaterial({ color: 0xdb2828 })
-        this.ponder = new Mesh(ponderGeometry, ponderMaterial)
-        this.ponder.position.set(
-            pos.x * unitWidth + unitWidth / 2,
-            (pos.y + 1) * unitWidth + 6,
-            pos.z * unitWidth + unitWidth / 2
-        )
         this.tingyun = new Mesh(ponderGeometry, tingyunMaterial)
-        this.scene.add(this.ponder)
         this.tingyun.position.set(
             this.destPos[0].x * unitWidth + unitWidth / 2,
             (this.destPos[0].y + 1) * unitWidth + 6,
@@ -149,50 +169,55 @@ class Level {
         this.scene.add(this.walkHint)
         this.walkHint.visible = false
     }
-    updatePonder(progress: number) {
-        if (this.ponder === null || this.walkHint === null)
+    updateAnimation(t: number) {
+        if (this.animation)
+            this.animation.mixer.update(t)
+    }
+    fixPos(p: Vector3) {
+        return new Vector3(
+            p.x * unitWidth + unitWidth / 2,
+            (p.y + 1) * unitWidth,
+            p.z * unitWidth + unitWidth / 2
+        )
+    }
+    updatePonder() {
+        if (!this.ponder || this.animateProgress <= 0)
             return
-        if (progress > 50 && progress < 100)
-            return
-        const ave = (progress >= 50 ? 100 : 50) / (this.route.length - 1)
-        let progressTmp = progress
-        this.walkHint.visible = true
-        if (progress >= 50) {
-            this.walkHint.visible = false
-            progressTmp -= 100
+        if (this.animateProgress < this.route.length - 1) {
+            this.animation.animations.Running.weight = 1
+            this.animation.animations.Standing.weight = 0
+            const targetPoint = this.route[this.animateProgress]
+            const direction = new Vector3().subVectors(targetPoint, this.route[this.animateProgress - 1])
+            if (direction.z > 0)
+                this.ponder.rotation.set(0, 0, 0)
+            else if (direction.z < 0)
+                this.ponder.rotation.set(0, Math.PI, 0)
+            else if (direction.x > 0)
+                this.ponder.rotation.set(0, Math.PI / 2, 0)
+            else if (direction.x < 0)
+                this.ponder.rotation.set(0, -Math.PI / 2, 0)
+            this.ponder.position.add(direction.clone().normalize().multiplyScalar(0.8))
+            const realTarget = this.fixPos(targetPoint)
+            const dist = Math.sqrt(Math.pow((this.ponder.position.x - this.ponder.position.y - realTarget.x + realTarget.y), 2) + Math.pow((this.ponder.position.z - this.ponder.position.y - realTarget.z + realTarget.y), 2))
+            if (dist < 1)
+                this.animateProgress++
         }
-        const prog = Math.floor(progressTmp / ave)
-        const rate = (progressTmp - prog * ave) / ave
-        let pos: Vector3
-        if (progress === 50 || progress === 200)
-            pos = this.route[this.route.length - 1]
         else {
-            const startVec = this.route[prog]
-            const direction = new Vector3().subVectors(this.route[prog + 1], this.route[prog]).multiplyScalar(rate)
-            pos = startVec.add(direction)
+            this.animateProgress = -5
+            this.animation.animations.Running.weight = 0
+            this.animation.animations.Standing.weight = 1
         }
-        if (progress <= 50)
-            this.walkHint.position.set(
-                pos.x * unitWidth + unitWidth / 2,
-                (pos.y + 1) * unitWidth + 6,
-                pos.z * unitWidth + unitWidth / 2
-            )
-        else if (progress >= 100)
-            this.ponder.position.set(
-                pos.x * unitWidth + unitWidth / 2,
-                (pos.y + 1) * unitWidth + 6,
-                pos.z * unitWidth + unitWidth / 2
-            )
-
     }
     walkRoute(route: Vector3[]) {
         if (this.ponder === null)
             return
         if (this.walkStage === this.nowStage)
             return
-        this.route = route
+        if (route.length <= 1)
+            return
+        this.route = route.concat([this.destPos[this.nowStage]])
         this.walkStage += 1
-        this.animateProgress = 0
+        this.animateProgress = 1
         this.disableControls()
     }
     enableControls() {

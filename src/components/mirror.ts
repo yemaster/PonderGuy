@@ -229,7 +229,7 @@ export default class Mirror extends Component {
         this.handleObjectVisibility()
     }
 
-    onClickEnd() { }
+    onDragEnd() { }
 
     setupMirrorCubes(objs: any[], scene: Scene) {
         this.realObjs = objs

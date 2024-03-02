@@ -6,7 +6,7 @@ const route = useRoute()
 const router = useRouter()
 
 // Three.js core modules
-import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2 } from 'three'
+import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2, Clock } from 'three'
 import { WebGLRenderer } from 'three'
 import Picker from '@/base/picker'
 
@@ -14,6 +14,7 @@ import Picker from '@/base/picker'
 import Level from '@/base/level'
 
 import debounce from 'lodash.debounce'
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 // Get level id
 let nowLevel: Level
@@ -137,6 +138,7 @@ const canvasResizeHandler = () => {
 }
 
 // Setup Scene
+const clock = new Clock()
 const setupScene = () => {
     canvas = document.getElementById("pg-canvas") as HTMLCanvasElement
     renderer = new WebGLRenderer({
@@ -148,7 +150,8 @@ const setupScene = () => {
     
     nowLevel = new Level(levelId.value, scene, camera, renderer)
 
-    //const oc = new OrbitControls(camera, renderer.domElement)
+    const oc = new OrbitControls(camera, renderer.domElement)
+    oc.enableRotate = false
 
     canvas.addEventListener("mousedown", (e: MouseEvent) => {
         isObjectChosen = !(picker.pickedObject === undefined)
@@ -207,7 +210,7 @@ const setupScene = () => {
     // Animate three.js scene
     const animate = () => {
         requestAnimationFrame(animate)
-        if (nowLevel.animateProgress === 200) {
+        if (nowLevel.animateProgress === -5) {
             nowLevel.animateProgress = -1
             nowLevel.enableControls()
             if (!nowLevel.nextStage()) {
@@ -220,9 +223,9 @@ const setupScene = () => {
             }
         }
         if (nowLevel.animateProgress !== -1) {
-            nowLevel.animateProgress += 2
-            nowLevel.updatePonder(nowLevel.animateProgress)
+            nowLevel.updatePonder()
         }
+        nowLevel.updateAnimation(clock.getDelta())
         picker.pick(new Vector2(pickPosition.x, pickPosition.y), scene, camera)
         renderer.render(scene, camera)
     }

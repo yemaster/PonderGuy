@@ -1,0 +1,8 @@
+{
+    "background": "#feffbd",
+    "start": [-2, 1, 7],
+    "dests": [[4, 1, -2], [11, 3, 6]],
+    "objects": [
+        { "type": "Cube", "pos": [0, 0, 4] }
+    ]
+}
