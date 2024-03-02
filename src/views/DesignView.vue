@@ -109,6 +109,8 @@ const canvasResizeHandler = () => {
     renderer.setPixelRatio(window.devicePixelRatio)
 }
 
+let tc!: TransformControls
+
 const setupScene = () => {
     canvas = document.getElementById("pg-canvas") as HTMLCanvasElement
     renderer = new WebGLRenderer({
@@ -120,11 +122,12 @@ const setupScene = () => {
 
     designer = new Designer(scene, camera, renderer, levelInfo.value.start)
     designer.addNewTingyun([0, 0, 1])
+    designer.dragControl.enabled = false
 
     const oc = new OrbitControls(camera, renderer.domElement)
     oc.enableRotate = false
 
-    const tc = new TransformControls(camera, renderer.domElement)
+    tc = new TransformControls(camera, renderer.domElement)
     tc.setSize(0.3)
     window.addEventListener("mousedown", (e) => {
         if (e.button === 2) {
@@ -205,6 +208,20 @@ const setupScene = () => {
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))
+
+const freeControl = ref(true)
+function changeFreeControl() {
+    if (freeControl.value) {
+        tc.enabled = true
+        designer.dragControl.enabled = false
+        scene.add(tc)
+    }
+    else {
+        tc.enabled = false
+        designer.dragControl.enabled = true
+        scene.remove(tc)
+    }
+}
 
 function changeBackground() {
     scene.background = new Color(levelInfo.value.background)
@@ -311,9 +328,19 @@ function exportLevel() {
                     </div>
                 </li>
                 <li class="list-group-item">
-                    <label for="background" class="form-label">背景色</label>
-                    <input class="form-control" name="background" v-model="levelInfo.background"
-                        @change="changeBackground">
+                    <label for="background" class="form-label">基础设定</label><br>
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" v-model="freeControl"
+                            @change="changeFreeControl" id="freeControlEnabled">
+                        <label class="form-check-label" for="freeControlEnabled">
+                            自由控制
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="background" class="form-label">背景色</label>
+                        <input class="form-control" name="background" v-model="levelInfo.background"
+                            @change="changeBackground">
+                    </div>
                 </li>
                 <li class="list-group-item">
                     <label for="background" class="form-label">起点坐标</label>
