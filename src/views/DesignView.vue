@@ -17,6 +17,8 @@ import { fixPos } from "@/base/methods"
 
 document.title = "关卡设计器 | Ponder Guy"
 
+const leftControl = ref()
+
 const levelInfo: Ref<levelData> = ref({
     background: "#feffbd",
     start: [0, 0, 0],
@@ -177,8 +179,22 @@ const setupScene = () => {
             const pos = designer.objects.indexOf(p)
             if (pos !== -1) {
                 const btn = document.querySelector(`#flush-button-${pos}`) as HTMLButtonElement
-                if (btn?.classList.contains("collapsed")) {
-                    btn?.click()
+                if (btn) {
+                    if (btn.classList.contains("collapsed"))
+                        btn.click()
+                    const tmr = setInterval(() => {
+                        const d = btn.getBoundingClientRect().top
+                        if (Math.abs(d - 80) <= 20) {
+                            leftControl.value.scrollTop += d - 80
+                            clearInterval(tmr)
+                        }
+                        else {
+                            if (d > 80)
+                                leftControl.value.scrollTop += 10
+                            else
+                                leftControl.value.scrollTop -= 10
+                        }
+                    }, 10)
                 }
             }
             if (["Cube", "Drawbox", "Rotator", "Mirror"].includes(p.name)) {
@@ -260,17 +276,19 @@ const objNameTrans = ref({
     "Plane": "平面"
 })
 
+let lastPos = [0, 0, 0]
 function addObject(type: string) {
     let objInfo!: objectInfo
+    lastPos[0]++
     switch (type) {
         case "Cube":
-            objInfo = { type, pos: [0, 0, 0], color: "#54c8ff" }
+            objInfo = { type, pos: lastPos, color: "#54c8ff" }
             break
         case "Drawbox":
-            objInfo = { type, pos: [0, 0, 0], size: [1, 1, 4], range: [[0, 0], [0, 0], [0, 0]], color: "#ffe21f" }
+            objInfo = { type, pos: lastPos, size: [1, 1, 4], range: [[0, 0], [0, 0], [0, 0]], color: "#ffe21f" }
             break
         case "Rotator":
-            objInfo = { type, pos: [0, 0, 0], size: 4, angle: 0, color: "#fb8888" }
+            objInfo = { type, pos: lastPos, size: [4, 4], face: 0, direction: 1, angle: 0, color: "#fb8888" }
     }
     levelInfo.value.objects.push(objInfo)
     designer.addNewObject(objInfo)
@@ -279,6 +297,7 @@ function addObject(type: string) {
 function changeObj(p: number) {
     //console.log(levelInfo.value.objects[p])
     designer.changeObjectInfo(p, levelInfo.value.objects[p])
+    lastPos = [...levelInfo.value.objects[p].pos]
 }
 function deleteObject(p: number) {
     levelInfo.value.objects.splice(p, 1)
@@ -310,18 +329,66 @@ function changeMirror() {
 }
 
 const levelDataString = ref("")
+const levelDataSetMode = ref("导出")
+const errorInfo = ref("")
+function importLevelBefore() {
+    levelDataSetMode.value = "导入"
+    levelDataString.value = ""
+    errorInfo.value = ""
+}
 function exportLevel() {
+    levelDataSetMode.value = "导出"
     levelDataString.value = btoa(JSON.stringify(levelInfo.value))
+    errorInfo.value = ""
+}
+function importLevel() {
+    try {
+        const levelRawData = JSON.parse(atob(levelDataString.value)) as levelData
+        while (levelInfo.value.dests.length > 0)
+            deleteDestPos(0)
+        while (levelInfo.value.objects.length > 0)
+            deleteObject(0)
+        mirrorEnabled.value = false
+        picker.updateObjs([])
+
+        levelInfo.value.start = levelRawData.start
+        changeStartPos()
+
+        for (let i = 0; i < levelRawData.dests.length; ++i) {
+            addDestPos()
+            levelInfo.value.dests[i] = levelRawData.dests[i]
+            updateDestPos(i)
+        }
+
+        for (let i = 0; i < levelRawData.objects.length; ++i) {
+            addObject(levelRawData.objects[i].type)
+            levelInfo.value.objects[i] = levelRawData.objects[i]
+            changeObj(i)
+        }
+
+        if (levelRawData.mirror) {
+            mirrorEnabled.value = true
+            changeMirrorEnableState()
+            levelInfo.value.mirror = levelRawData.mirror
+            changeMirror()
+        }
+    }
+    catch (e) {
+        errorInfo.value = `导入失败!\n${e}`
+    }
 }
 </script>
 
 <template>
     <div class="ponder-design">
-        <div class="left-control">
+        <div class="left-control" ref="leftControl">
             <ul class="control-group list-group list-group-flush">
                 <li class="list-group-item sticky-top">
                     <h4>关卡设计器</h4>
                     <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                            data-bs-target="#exportModal" @click="importLevelBefore"
+                            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">导入</button>
                         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
                             data-bs-target="#exportModal" @click="exportLevel"
                             style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">导出</button>
@@ -432,13 +499,28 @@ function exportLevel() {
                                         <div class="form-group mb-3">
                                             <label class="form-label">物体大小</label>
                                             <div class="input-group">
-                                                <input type="number" min="1" class="form-control" placeholder="x长度"
-                                                    v-model="o.size" @change="changeObj(i)">
+                                                <input type="number" min="1" class="form-control" placeholder="长度1"
+                                                    v-model="o.size[0]" @change="changeObj(i)">
+                                                <input type="number" min="1" class="form-control" placeholder="长度2"
+                                                    v-model="o.size[1]" @change="changeObj(i)">
                                             </div>
                                         </div>
                                         <div class="form-group mb-3">
+                                            <label class="form-label">摆放方向</label>
+                                            <input type="number" min="0" max="3" class="form-control" placeholder="最小值"
+                                                v-model="o.face" @change="changeObj(i)">
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">旋转面</label>
+                                            <select class="form-control" v-model="o.direction" @change="changeObj(i)">
+                                                <option :value="0">yOz平面</option>
+                                                <option :value="1">xOz平面</option>
+                                                <option :value="2">xOy平面</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group mb-3">
                                             <label class="form-label">初始方向</label>
-                                            <input type="number" class="form-control" placeholder="最小值"
+                                            <input type="number" min="0" max="3" class="form-control" placeholder="最小值"
                                                 v-model="o.angle" @change="changeObj(i)">
                                         </div>
                                     </template>
@@ -533,16 +615,19 @@ function exportLevel() {
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exportModalLabel">导出代码</h1>
+                    <h1 class="modal-title fs-5" id="exportModalLabel">{{ levelDataSetMode }}代码</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     关卡代码<br>
                     <textarea class="form-control" style="width: 100%; height: 100%; min-height: 200px"
-                        v-model="levelDataString"></textarea>
+                        v-model="levelDataString"></textarea><br>
+                    <span style="color: #db2828">{{ errorInfo }}</span>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>
+                    <button type="button" class="btn btn-primary" v-if="levelDataSetMode === '导入'"
+                        @click="importLevel">确定</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                 </div>
             </div>
         </div>

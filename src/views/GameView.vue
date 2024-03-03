@@ -6,7 +6,7 @@ const route = useRoute()
 const router = useRouter()
 
 // Three.js core modules
-import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2, Clock } from 'three'
+import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2, Clock, AxesHelper } from 'three'
 import { WebGLRenderer } from 'three'
 import Picker from '@/base/picker'
 
@@ -243,8 +243,8 @@ const setupScene = () => {
         fog.value.style.visibility = "hidden"
     }, 2200)
 }
-//const axesHelper = new THREE.AxesHelper(100)
-//scene.add(axesHelper)
+const axesHelper = new AxesHelper(100)
+scene.add(axesHelper)
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))

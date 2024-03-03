@@ -24,7 +24,7 @@ class DrawBox extends Component {
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 1]
         this.range = args?.[2] || [[1], [1], [1]]
-        this.color = args?.[3] || "0xffe21f"
+        this.color = args?.[3] || "#ffe21f"
     }
 
     generateElement(...args: any): void {

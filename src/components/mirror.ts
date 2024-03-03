@@ -53,9 +53,11 @@ export default class Mirror extends Component {
             if (v.mirrorComponent) {
                 switch (v.name) {
                     case "Cube":
+                        console.log(v.pos, v.mirrorComponent.pos)
                         v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
                         break
                     case "Drawbox":
+                        console.log(v.pos, v.mirrorComponent.pos)
                         tmpPos = calcMirrorPos(v.pos, this.pos, face)
                         tmpPos[face] -= v.len[face] - 1
                         v.mirrorComponent.setPos(tmpPos)
@@ -66,7 +68,8 @@ export default class Mirror extends Component {
                         break
                     case "Rotator":
                         v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
-                        v.mirrorComponent.setAngle(calcMirrorAngle(v.angle, face))
+                        v.mirrorComponent.setFace(calcMirrorAngle(v.face, face))
+                        v.mirrorComponent.setAngle(v.angle * ((v.direction === face) ? 1 : -1))
                         v.mirrorInfo = {
                             face
                         }
@@ -82,7 +85,7 @@ export default class Mirror extends Component {
                         scene.add(tmpObj)
                         break
                     case "Rotator":
-                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, v.color, calcMirrorAngle(v.angle, face))
+                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), [v.len[1], v.len[0]], v.color, v.angle * ((v.direction === face) ? 1 : -1), v.direction, calcMirrorAngle(v.face, face))
                         tmpObj.enabled = false
                         v.mirrorComponent = tmpObj
                         v.mirrorInfo = {

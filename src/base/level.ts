@@ -1,5 +1,5 @@
 // Three.js & Core components
-import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Matrix4, Euler } from "three"
+import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Matrix4, Euler, PlaneHelper } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth, type objectInfo } from "./constants";
 import Plane from "@/components/plane"
@@ -87,7 +87,7 @@ class Level {
                         dragObjs.push(tmpDrawbox)
                         break
                     case "Rotator":
-                        obj = new Rotator(v.pos, v.size, v.color, v.angle)
+                        obj = new Rotator(v.pos, v.size, v.color, v.angle, v.direction, v.face)
                         this.scene.add(obj)
                         this.allCubes.push(obj)
                         break

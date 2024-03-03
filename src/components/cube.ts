@@ -9,7 +9,7 @@ class Cube extends Component {
         super(...args)
         this.name = "Cube"
         this.pos = args[0]
-        this.color = args?.[1] || "0x54c8ff"
+        this.color = args?.[1] || "#54c8ff"
     }
     generateElement(...args: any) {
         this.generateCube(args[0], args?.[1])

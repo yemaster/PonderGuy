@@ -5,6 +5,8 @@ export type CubeInfo = {
     pos: [number, number, number];
     size?: never;
     angle?: never;
+    direction?: never;
+    face?: never;
     range?: never;
     color?: string;
 }
@@ -14,6 +16,8 @@ export type DrawboxInfo = {
     pos: [number, number, number];
     size: [number, number, number];
     angle?: never;
+    direction?: never;
+    face?: never;
     range: [number[], number[], number[]];
     color?: string;
 }
@@ -21,8 +25,10 @@ export type DrawboxInfo = {
 export type RotatorInfo = {
     type: "Rotator";
     pos: [number, number, number];
-    size: number;
+    size: [number, number];
     angle: number;
+    direction: number;
+    face: number;
     range?: never;
     color?: string;
 }
@@ -32,6 +38,8 @@ export type PlaneInfo = {
     pos: [number, number, number];
     size?: never;
     angle?: never;
+    direction?: never;
+    face?: never;
     range?: never;
     color?: string;
 }

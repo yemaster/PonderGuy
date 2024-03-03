@@ -121,7 +121,7 @@ export default class Designer {
                 this.drawObjs.push(tmpObj)
                 break
             case "Rotator":
-                tmpObj = new Rotator(info.pos, info.size, info.color, info.angle)
+                tmpObj = new Rotator(info.pos, info.size, info.color, info.angle, info.direction, info.face)
                 pos ? this.objects[pos] = tmpObj : this.objects.push(tmpObj)
                 break
         }
@@ -142,7 +142,6 @@ export default class Designer {
             this.mirror.updateMirrorCubePos()
         }
         const d = this.objects[p]
-        console.log("?", d)
         if (this.mirror && d.mirrorComponent) {
             this.mirror.inMirrorObjs.splice(this.mirror.inMirrorObjs.indexOf(d.mirrorComponent), 1)
             d.mirrorComponent.children.forEach((v: any) => {
@@ -182,6 +181,11 @@ export default class Designer {
                 d.setSize(info.size)
             if (info.color && d.setColor)
                 d.setColor(info.color)
+            if ((info.direction || info.direction === 0) && d.setDirection)
+                d.setDirection(info.direction)
+            if ((info.face || info.face === 0) && d.setFace)
+                d.setFace(info.face)
+            console.log(d.name, info.pos)
         }
         if (this.mirror)
             this.mirror.updateMirrorCubePos()
@@ -207,6 +211,7 @@ export default class Designer {
             this.mirror.setSize(info.size)
         if (info.range)
             this.mirror.setRange(info.range)
+        this.mirror.updateMirrorCubePos()
     }
 
     disposeMirror() {

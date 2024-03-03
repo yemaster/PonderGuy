@@ -9,66 +9,122 @@ const calcPos = (p: number, l: number = 1): number => {
 
 class Rotator extends Component {
     pos: [number, number, number];
-    len: number;
+    len: [number, number];
     startVector: Vector3 | null = null;
     mirrorInfo: { face: number } = { face: 0 }
     plane: Plane;
     angle: number;
+    face: number;
     enabled: boolean = true;
+    direction: number = 1; // 0:x, 1:y, 2:z
+    angleAccumulate: number = 0;
 
     constructor(...args: any) {
         super(...args)
         this.movable = true
         this.name = "Rotator"
         this.pos = args?.[0] || [0, 0, 0]
-        this.len = args?.[1] || 1
-        this.angle = args?.[3] || 0;
+        this.len = args?.[1] || [4, 4]
+        this.angle = args?.[3] || 0
+        this.face = args?.[5] || 0
+        this.direction = args?.[4] || 0
         this.plane = new Plane(new Vector3(0, 1, 0), -calcPos(this.pos[1], 1))
-        this.color = args?.[2] || "0xfb8888"
+        this.color = args?.[2] || "#fb8888"
 
+        this.setFace(this.face)
+        this.setDirection(this.direction)
+    }
+
+    setFace(face: number) {
+        this.face = ((face || 0) % 4 + 4) % 4
+        const c1 = this.children[0] as Mesh
+        const c2 = this.children[1] as Mesh
+        c1.geometry.dispose()
+        c2.geometry.dispose()
+        switch (face) {
+            case 0:
+                c1.geometry = new BoxGeometry(unitWidth * this.len[0], unitWidth, unitWidth)
+
+                c1.position.x = calcPos(-1 / 2, this.len[0])
+                c1.position.y = calcPos(-1 / 2)
+                c1.position.z = calcPos(-1 / 2)
+
+                c2.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[1])
+
+                c2.position.x = calcPos(-1 / 2)
+                c2.position.y = calcPos(-1 / 2)
+                c2.position.z = calcPos(-1 / 2, this.len[1])
+                break;
+            case 1:
+                c1.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[0])
+
+                c1.position.x = calcPos(-1 / 2)
+                c1.position.y = calcPos(-1 / 2)
+                c1.position.z = calcPos((1 / 2 - this.len[0]), this.len[0])
+
+                c2.geometry = new BoxGeometry(unitWidth * this.len[1], unitWidth, unitWidth)
+
+                c2.position.x = calcPos(-1 / 2, this.len[1])
+                c2.position.y = calcPos(-1 / 2)
+                c2.position.z = calcPos(-1 / 2)
+                break;
+            case 2:
+                c1.geometry = new BoxGeometry(unitWidth * this.len[0], unitWidth, unitWidth)
+
+                c1.position.x = calcPos((1 / 2 - this.len[0]), this.len[0])
+                c1.position.y = calcPos(-1 / 2)
+                c1.position.z = calcPos(-1 / 2)
+
+                c2.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[1])
+
+                c2.position.x = calcPos(-1 / 2)
+                c2.position.y = calcPos(-1 / 2)
+                c2.position.z = calcPos((1 / 2 - this.len[1]), this.len[1])
+                break;
+            case 3:
+                c1.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[0])
+
+                c1.position.x = calcPos(-1 / 2)
+                c1.position.y = calcPos(-1 / 2)
+                c1.position.z = calcPos(-1 / 2, this.len[0])
+
+                c2.geometry = new BoxGeometry(unitWidth * this.len[1], unitWidth, unitWidth)
+
+                c2.position.x = calcPos((1 / 2 - this.len[1]), this.len[1])
+                c2.position.y = calcPos(-1 / 2)
+                c2.position.z = calcPos(-1 / 2)
+                break;
+        }
+        this.mirrorComponent?.setFace(this.face)
+    }
+
+    setDirection(direction: number) {
+        this.direction = (Math.floor(direction) || 0) % 3
         this.setAngle(this.angle)
+        //console.log("Direction:", this.direction, this.pos)
+        this.plane = new Plane(new Vector3(Number(this.direction === 0), Number(this.direction === 1), Number(this.direction === 2)), -calcPos(this.pos[this.direction], 1))
     }
 
     setAngle(angle: number) {
-        this.angle = (Math.floor(angle) || 0) % 4
-        let rot: [number, number, number] = [0, 0, 0]
-        switch (angle) {
-            case 1:
-                rot = [0, Math.PI / 2, 0]
-                break;
-            case 2:
-                rot = [Math.PI, 0, Math.PI]
-                break;
-            case 3:
-                rot = [0, 3 * Math.PI / 2, 0]
-                break;
-        }
-        this.rotation.fromArray(rot);
+        this.angle = ((Math.floor(angle) || 0) % 4 + 4) % 4
+        //console.log(this.angle)
+        const rot: [number, number, number] = [0, 0, 0]
+        rot[this.direction] = Math.PI * angle / 2
+        //console.log(rot)
+        this.rotation.x = rot[0]
+        this.rotation.y = rot[1]
+        this.rotation.z = rot[2]
     }
 
     setPos(pos: [number, number, number]) {
         this.pos = pos
-        this.position.set(unitWidth * (pos[0] + 1 / 2), unitWidth * pos[1], unitWidth * (pos[2] + 1 / 2))
+        this.position.set(unitWidth * (pos[0] + 1 / 2), unitWidth * (pos[1] + 1 / 2), unitWidth * (pos[2] + 1 / 2))
     }
 
-    setSize(len: number) {
+    setSize(len: [number, number]) {
         this.len = len
-        const box1 = this.children[0] as Mesh
-        const box2 = this.children[1] as Mesh
 
-        box1.geometry.dispose()
-        box1.geometry = new BoxGeometry(unitWidth * len, unitWidth, unitWidth)
-
-        box1.position.x = calcPos(-1 / 2, len)
-        box1.position.y = calcPos(0)
-        box1.position.z = calcPos(-1 / 2)
-
-        box2.geometry.dispose()
-        box2.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * len)
-
-        box2.position.x = calcPos(-1 / 2)
-        box2.position.y = calcPos(0)
-        box2.position.z = calcPos(-1 / 2, len)
+        this.setFace(this.face)
     }
 
     setColor(color: string) {
@@ -86,28 +142,30 @@ class Rotator extends Component {
         this.generateDrawbox(args[0], args[1], args[2])
     }
 
-    generateDrawbox(pos: [number, number, number], len: number, color: ColorRepresentation = 0xfb8888) {
-        const geometry1 = new BoxGeometry(unitWidth * len, unitWidth, unitWidth)
+    generateDrawbox(pos: [number, number, number], len: [number, number], color: ColorRepresentation = 0xfb8888) {
+        const geometry1 = new BoxGeometry(unitWidth * len[0], unitWidth, unitWidth)
         const material = new MeshLambertMaterial({ color })
         const box1 = new Mesh(geometry1, material)
 
-        box1.position.x = calcPos(-1 / 2, len)
-        box1.position.y = calcPos(0)
+        box1.position.x = calcPos(-1 / 2, len[0])
+        box1.position.y = calcPos(-1 / 2)
         box1.position.z = calcPos(-1 / 2)
+        //console.log("POs1", box1.position)
 
-        const geometry2 = new BoxGeometry(unitWidth, unitWidth, unitWidth * len)
+        const geometry2 = new BoxGeometry(unitWidth, unitWidth, unitWidth * len[1])
         const box2 = new Mesh(geometry2, material)
 
         box2.position.x = calcPos(-1 / 2)
-        box2.position.y = calcPos(0)
-        box2.position.z = calcPos(-1 / 2, len)
+        box2.position.y = calcPos(-1 / 2)
+        box2.position.z = calcPos(-1 / 2, len[1])
+        //console.log("POS2", box1.position)
 
         this.add(box1)
         this.add(box2)
 
         //this.position.set(-unitWidth / 2, -unitWidth / 2, -unitWidth / 2)
         //this.rotation.y = this.angle * Math.PI / 2
-        this.position.set(unitWidth * (pos[0] + 1 / 2), unitWidth * pos[1], unitWidth * (pos[2] + 1 / 2))
+        this.position.set(unitWidth * (pos[0] + 1 / 2), unitWidth * (pos[1] + 1 / 2), unitWidth * (pos[2] + 1 / 2))
 
         //const geometry = new PlaneGeometry(1000, 1000)
         //const material2 = new MeshBasicMaterial({ opacity: 0 })
@@ -120,6 +178,7 @@ class Rotator extends Component {
     onDragStart(raycaster: Raycaster) {
         if (!this.enabled)
             return
+        this.angleAccumulate = this.angle * Math.PI / 2
         const pos = new Vector3()
         raycaster.ray.intersectPlane(this.plane, pos)
         this.startVector = pos.sub({ x: calcPos(this.pos[0]), y: calcPos(this.pos[1]), z: calcPos(this.pos[2]) })
@@ -131,9 +190,10 @@ class Rotator extends Component {
         if (this.startVector === null)
             return
         const pos = new Vector3()
+        //console.log(this.plane)
         raycaster.ray.intersectPlane(this.plane, pos)
         pos.sub({ x: calcPos(this.pos[0]), y: calcPos(this.pos[1]), z: calcPos(this.pos[2]) })
-
+        //console.log(new Vector3().subVectors(this.startVector, pos))
         const tmpVector = new Vector3()
         tmpVector.crossVectors(this.startVector, pos)
 
@@ -141,16 +201,20 @@ class Rotator extends Component {
         this.startVector = pos
         this.position.set(unitWidth / 2, unitWidth / 2, unitWidth / 2)
 
-        if (tmpVector.y < 0)
-            angle = -angle
-        this.rotateY(angle)
+        angle *= (this.direction === 0 && tmpVector.x < 0) ||
+            (this.direction === 1 && tmpVector.y < 0) ||
+            (this.direction === 2 && tmpVector.z < 0) ? -1 : 1;
+        this.angleAccumulate += angle
+        this.angleAccumulate = (this.angleAccumulate % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
 
-        this.position.set(unitWidth * (this.pos[0] + 1 / 2), unitWidth * this.pos[1], unitWidth * (this.pos[2] + 1 / 2))
+        this.rotation.fromArray([0, 1, 2].map(d => this.angleAccumulate * Number(d === this.direction)) as [number, number, number])
+
+        this.position.set(unitWidth * (this.pos[0] + 1 / 2), unitWidth * (this.pos[1] + 1 / 2), unitWidth * (this.pos[2] + 1 / 2))
 
         if (this.mirrorComponent) {
             this.mirrorComponent.position.set(unitWidth / 2, unitWidth / 2, unitWidth / 2)
-            this.mirrorComponent.rotateY(-angle)
-            this.mirrorComponent.position.set(unitWidth * (this.mirrorComponent.pos[0] + 1 / 2), unitWidth * this.mirrorComponent.pos[1], unitWidth * (this.mirrorComponent.pos[2] + 1 / 2))
+            this.mirrorComponent.rotation.fromArray([0, 1, 2].map(d => this.angleAccumulate * Number(d === this.direction) * ((this.mirrorInfo.face === this.direction) ? 1 : -1)) as [number, number, number])
+            this.mirrorComponent.position.set(unitWidth * (this.mirrorComponent.pos[0] + 1 / 2), unitWidth * (this.mirrorComponent.pos[1] + 1 / 2), unitWidth * (this.mirrorComponent.pos[2] + 1 / 2))
         }
     }
 
@@ -170,31 +234,20 @@ class Rotator extends Component {
         this.startVector = pos
         this.position.set(-unitWidth / 2, -unitWidth / 2, -unitWidth / 2)
 
-        if (tmpVector.y < 0)
-            angle = -angle
-        this.rotateY(angle)
-
-        this.position.set(unitWidth * (this.pos[0] + 1 / 2), unitWidth * this.pos[1], unitWidth * (this.pos[2] + 1 / 2))
-        const rot = this.rotation.toArray() as [number, number, number]
-        for (let i = 0; i < 3; ++i) {
-            rot[i] = Math.round(2 * rot[i] / Math.PI)
-            rot[i] = (rot[i] % 4 + 4) % 4
-        }
-        this.angle = rot[1]
-        if (![0, 1, 2, 3].includes(this.angle))
-            this.angle = 0
-        if (this.angle === 0 && rot[0] === 2) {
-            this.angle = 2
-        }
-        for (let i = 0; i < 3; ++i) {
-            rot[i] = rot[i] * Math.PI / 2
-        }
-        this.rotation.fromArray(rot)
-
+        angle *= (this.direction === 0 && tmpVector.x < 0) ||
+            (this.direction === 1 && tmpVector.y < 0) ||
+            (this.direction === 2 && tmpVector.z < 0) ? -1 : 1;
+        this.angleAccumulate += angle
+        this.angle = Math.round(this.angleAccumulate * 2 / Math.PI)
         this.angle = (this.angle % 4 + 4) % 4
-        if (this.mirrorComponent)
-            this.mirrorComponent.setAngle(calcMirrorAngle(this.angle, this.mirrorInfo.face))
-        //console.log(this.rotation)
+        this.angleAccumulate = this.angle * Math.PI / 2
+        this.rotation.fromArray([0, 1, 2].map(d => this.angleAccumulate * Number(d === this.direction)) as [number, number, number])
+
+        this.position.set(unitWidth * (this.pos[0] + 1 / 2), unitWidth * (this.pos[1] + 1 / 2), unitWidth * (this.pos[2] + 1 / 2))
+
+        console.log(this.angle)
+        this.mirrorComponent?.setAngle(this.angle * ((this.mirrorInfo.face === this.direction) ? 1 : -1))
+        console.log(this.mirrorComponent.rotation)
     }
 }
 
