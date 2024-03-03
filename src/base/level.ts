@@ -196,10 +196,10 @@ class Level {
                 this.ponder.rotation.set(0, Math.PI / 2, 0)
             else if (direction.x < 0)
                 this.ponder.rotation.set(0, -Math.PI / 2, 0)
-            this.ponder.position.add(direction.clone().normalize().multiplyScalar(0.8))
+            this.ponder.position.add(direction.clone().normalize().multiplyScalar(1.2))
             const realTarget = this.fixPos(targetPoint)
             const dist = Math.sqrt(Math.pow((this.ponder.position.x - this.ponder.position.y - realTarget.x + realTarget.y), 2) + Math.pow((this.ponder.position.z - this.ponder.position.y - realTarget.z + realTarget.y), 2))
-            if (dist < 1)
+            if (dist < 1.2)
                 this.animateProgress++
         }
         else {
