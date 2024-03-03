@@ -249,6 +249,9 @@ export default class Mirror extends Component {
         this.realObjs.forEach((v: any) => {
             if (v.mirrorComponent)
                 v.mirrorComponent = undefined
+            v.children.forEach((k: any) => {
+                k.material.clippingPlanes = null
+            })
         })
         this.children.forEach((v: any) => {
             if (v.geometry) {
