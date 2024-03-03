@@ -24,6 +24,7 @@ class Rotator extends Component {
         this.len = args?.[1] || 1
         this.angle = args?.[3] || 0;
         this.plane = new Plane(new Vector3(0, 1, 0), -calcPos(this.pos[1], 1))
+        this.color = args?.[2] || "0xfb8888"
 
         this.setAngle(this.angle)
     }
@@ -68,6 +69,17 @@ class Rotator extends Component {
         box2.position.x = calcPos(-1 / 2)
         box2.position.y = calcPos(0)
         box2.position.z = calcPos(-1 / 2, len)
+    }
+
+    setColor(color: string) {
+        this.color = color
+        this.children.forEach(v => {
+            (v as any)?.material?.color.setStyle(color)
+        })
+        if (this.mirrorComponent)
+            this.mirrorComponent.children.forEach((v: any) => {
+                v?.material?.color.setStyle(color)
+            })
     }
 
     generateElement(...args: any): void {

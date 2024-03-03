@@ -21,6 +21,7 @@ export default class Mirror extends Component {
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 0]
         this.range = args?.[2] || [[1], [1], [1]]
+        this.color = "0xffffff"
     }
 
     generateElement(...args: any): void {
@@ -75,13 +76,13 @@ export default class Mirror extends Component {
             else {
                 switch (v.name) {
                     case "Cube":
-                        tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face))
+                        tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face), v.color)
                         v.mirrorComponent = tmpObj
                         this.inMirrorObjs.push(tmpObj)
                         scene.add(tmpObj)
                         break
                     case "Rotator":
-                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, undefined, calcMirrorAngle(v.angle, face))
+                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), v.len, v.color, calcMirrorAngle(v.angle, face))
                         tmpObj.enabled = false
                         v.mirrorComponent = tmpObj
                         v.mirrorInfo = {
@@ -93,7 +94,7 @@ export default class Mirror extends Component {
                     case "Drawbox":
                         tmpPos = calcMirrorPos(v.pos, this.pos, face)
                         tmpPos[face] -= v.len[face] - 1
-                        tmpObj = new DrawBox(tmpPos, v.len, undefined)
+                        tmpObj = new DrawBox(tmpPos, v.len, v.color)
                         v.mirrorComponent = tmpObj
                         v.mirrorInfo = {
                             pos: this.pos,

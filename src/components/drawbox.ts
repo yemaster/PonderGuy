@@ -24,6 +24,7 @@ class DrawBox extends Component {
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 1]
         this.range = args?.[2] || [[1], [1], [1]]
+        this.color = args?.[3] || "0xffe21f"
     }
 
     generateElement(...args: any): void {
@@ -65,6 +66,17 @@ class DrawBox extends Component {
 
     setRange(range: [number[], number[], number[]]) {
         this.range = range
+    }
+
+    setColor(color: string) {
+        this.color = color
+        this.children.forEach(v => {
+            (v as any)?.material?.color.setStyle(color)
+        })
+        if (this.mirrorComponent)
+            this.mirrorComponent.children.forEach((v: any) => {
+                v?.material?.color.setStyle(color)
+            })
     }
 
     onControlDrag(e: any) {

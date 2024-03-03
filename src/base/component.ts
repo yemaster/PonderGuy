@@ -5,6 +5,7 @@ export default abstract class Component extends Group {
     key: string;
     movable: boolean = false;
     mirrorComponent: any;
+    color!: string;
     constructor(...args: any) {
         super()
         this.key = v4()

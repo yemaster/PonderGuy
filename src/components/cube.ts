@@ -9,6 +9,7 @@ class Cube extends Component {
         super(...args)
         this.name = "Cube"
         this.pos = args[0]
+        this.color = args?.[1] || "0x54c8ff"
     }
     generateElement(...args: any) {
         this.generateCube(args[0], args?.[1])
@@ -37,9 +38,14 @@ class Cube extends Component {
     }
 
     setColor(color: string) {
+        this.color = color
         this.children.forEach(v => {
             (v as any)?.material?.color.setStyle(color)
         })
+        if (this.mirrorComponent)
+            this.mirrorComponent.children.forEach((v: any) => {
+                v?.material?.color.setStyle(color)
+            })
     }
 }
 (Cube as any).cnName = "正方体";
