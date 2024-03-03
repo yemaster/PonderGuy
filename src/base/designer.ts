@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Vector3, type OrthographicCamera, type Scene, type Vector3Like, WebGLRenderer } from "three"
+import { BoxGeometry, Mesh, MeshBasicMaterial, Vector3, type OrthographicCamera, type Scene, WebGLRenderer } from "three"
 import { unitWidth, type objectInfo, type MirrorInfo } from "./constants";
 import Cube from "@/components/cube";
 import DrawBox from "@/components/drawbox";

@@ -1,4 +1,4 @@
-import { Object3D, type Object3DEventMap, Raycaster, type Scene, type Vector2, type OrthographicCamera, type PerspectiveCamera, Vector3 } from "three"
+import { Raycaster, type Scene, type Vector2, type OrthographicCamera, type PerspectiveCamera, Vector3 } from "three"
 
 class Picker {
     raycaster: Raycaster;

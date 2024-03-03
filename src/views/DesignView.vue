@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, render, type Ref } from "vue"
+import { onMounted, ref, type Ref } from "vue"
 import { unitWidth, type levelData, type objectInfo } from "@/base/constants"
 
 // bootstrap
@@ -28,7 +28,6 @@ const levelInfo: Ref<levelData> = ref({
 
 // Click Events
 const pickPosition = { x: 0, y: 0 }
-const originPosition = { x: 0, y: 0 }
 const picker = new Picker()
 
 const sizes = {
@@ -182,19 +181,22 @@ const setupScene = () => {
                 if (btn) {
                     if (btn.classList.contains("collapsed"))
                         btn.click()
-                    const tmr = setInterval(() => {
-                        const d = btn.getBoundingClientRect().top
-                        if (Math.abs(d - 80) <= 20) {
-                            leftControl.value.scrollTop += d - 80
-                            clearInterval(tmr)
-                        }
-                        else {
-                            if (d > 80)
-                                leftControl.value.scrollTop += 10
-                            else
-                                leftControl.value.scrollTop -= 10
-                        }
-                    }, 10)
+                    setTimeout(() => {
+                        const tmr = setInterval(() => {
+                            const d = btn.getBoundingClientRect().top
+                            if (Math.abs(d - 80) <= 30 || (leftControl.value.scrollTop + leftControl.value.offsetHeight + 10 > leftControl.value.scrollHeight)) {
+                                leftControl.value.scrollTop += d - 80
+                                clearInterval(tmr)
+                            }
+                            else {
+                                if (d > 80)
+                                    leftControl.value.scrollTop += 10
+                                else
+                                    leftControl.value.scrollTop -= 10
+                            }
+
+                        }, 10)
+                    }, 300)
                 }
             }
             if (["Cube", "Drawbox", "Rotator", "Mirror"].includes(p.name)) {
@@ -243,16 +245,6 @@ function changeBackground() {
     scene.background = new Color(levelInfo.value.background)
 }
 
-function parsePos(p: string): [number, number, number] {
-    const tmpPos: string[] = p.split(",")
-    const pos: [number, number, number] = [0, 0, 0]
-    if (tmpPos.length !== 3)
-        return [0, 0, 0]
-    for (let i = 0; i < 3; ++i)
-        pos[i] = Math.floor(Number(tmpPos[i])) || 0
-    return pos
-}
-
 function changeStartPos() {
     designer.changePonderPos(levelInfo.value.start)
 }
@@ -276,7 +268,7 @@ const objNameTrans = ref({
     "Plane": "平面"
 })
 
-let lastPos = [0, 0, 0]
+let lastPos: [number, number, number] = [0, 0, 0]
 function addObject(type: string) {
     let objInfo!: objectInfo
     lastPos[0]++
