@@ -1,5 +1,5 @@
 // Three.js & Core components
-import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Matrix4, Euler, PlaneHelper } from "three"
+import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth, type objectInfo } from "./constants";
 import Plane from "@/components/plane"
@@ -127,7 +127,7 @@ class Level {
             //console.log(gltf)
             this.ponder = gltf.scene
             //console.log(gltf.animations)
-            this.ponder.scale.set(22, 22, 22)
+            this.ponder.scale.set(14.5, 14.5, 14.5)
             this.ponder.position.set(
                 pos.x * unitWidth + unitWidth / 2 + 100,
                 (pos.y + 1) * unitWidth + 100,
@@ -196,10 +196,10 @@ class Level {
                 this.ponder.rotation.set(0, Math.PI / 2, 0)
             else if (direction.x < 0)
                 this.ponder.rotation.set(0, -Math.PI / 2, 0)
-            this.ponder.position.add(direction.clone().normalize().multiplyScalar(1.2))
+            this.ponder.position.add(direction.clone().normalize().multiplyScalar(0.8))
             const realTarget = this.fixPos(targetPoint)
             const dist = Math.sqrt(Math.pow((this.ponder.position.x - this.ponder.position.y - realTarget.x + realTarget.y), 2) + Math.pow((this.ponder.position.z - this.ponder.position.y - realTarget.z + realTarget.y), 2))
-            if (dist < 1.2)
+            if (dist < 0.8)
                 this.animateProgress++
         }
         else {

@@ -1,4 +1,4 @@
-import { Vector3 } from 'three'
+import { Quaternion, Vector3 } from 'three'
 
 class Point {
     x: number;
@@ -16,7 +16,7 @@ class Point {
         return this
     }
     fromVector3(p: Vector3) {
-        return this.fromArray(p.toArray())
+        return this.fromArray([p.x, p.y, p.z])
     }
     manhattanDist(p: Point) {
         return Math.abs(this.x - p.x) + Math.abs(this.y - p.y)
@@ -37,8 +37,14 @@ function getVirtualPos(arr: any[]) {
     const res: [number, number, number][] = []
     arr.forEach(v => {
         if (v.isGroup) {
-            let d1 = [0, 0, 1]
-            let d2 = [1, 0, 0]
+            let d1: Vector3
+            let d2: Vector3
+            let rotQuaternion: Quaternion
+            const directionVectors = [
+                new Vector3(1, 0, 0),
+                new Vector3(0, 1, 0),
+                new Vector3(0, 0, 1)
+            ];
             //console.log(v)
             switch (v.name) {
                 case "Cube":
@@ -60,25 +66,28 @@ function getVirtualPos(arr: any[]) {
                             }
                     break
                 case "Rotator":
-                    //console.log(v.pos, v.len, v.angle)
-                    d1 = [0, 0, 1]
-                    d2 = [1, 0, 0]
-                    if (v.angle === 1 || v.angle === 2)
-                        d1[2] = -1
-                    if (v.angle === 2 || v.angle === 3)
-                        d2[0] = -1
-                    for (let i = 0; i < v.len; ++i) {
+                    d1 = new Vector3()
+                    d2 = new Vector3()
+                    d1[v.face[0][1] as ("x" | "y" | "z")] = v.face[0][0] === "-" ? -1 : 1
+                    d2[v.face[1][1] as ("x" | "y" | "z")] = v.face[1][0] === "-" ? -1 : 1
+                    console.log(d1, d2)
+                    rotQuaternion = new Quaternion().setFromAxisAngle(directionVectors[v.direction], v.angle * Math.PI / 2)
+                    console.log(directionVectors[v.direction])
+                    d1.applyQuaternion(rotQuaternion).round()
+                    d2.applyQuaternion(rotQuaternion).round()
+
+                    for (let i = 0; i < v.len[0]; ++i) {
                         res.push([
-                            v.pos[0] + d1[0] * i,
-                            v.pos[1] + d1[1] * i,
-                            v.pos[2] + d1[2] * i
+                            v.pos[0] + d1.x * i,
+                            v.pos[1] + d1.y * i,
+                            v.pos[2] + d1.z * i
                         ])
                     }
-                    for (let i = 1; i < v.len; ++i) {
+                    for (let i = 1; i < v.len[1]; ++i) {
                         res.push([
-                            v.pos[0] + d2[0] * i,
-                            v.pos[1] + d2[1] * i,
-                            v.pos[2] + d2[2] * i
+                            v.pos[0] + d2.x * i,
+                            v.pos[1] + d2.y * i,
+                            v.pos[2] + d2.z * i
                         ])
                     }
             }
@@ -90,15 +99,7 @@ function getVirtualPos(arr: any[]) {
 
 function filterObjs(pos: [number, number, number, number?][], mPos: [number, number, number], mLen: [number, number, number], type: number = 1) {
     const face = mLen[0] === 0 ? 0 : 2
-    // face = 2
-    // left bottom corner: (mPos[0],mPos[1],mPos[2]) x+1
-    // right top corner:   (mPos[0]+mLen[0],mPos[1]+mLen[1],mPos[2]) x-1 y-1
 
-    // face = 0
-    // left bottom corner: (mPos[0],mPos[1],mPos[2]+mLen[2]) z-1
-    // right top corner:   (mPos[0],mPos[1]+mLen[1],mPos[2]) y-1 z+1
-
-    // left < right, bottom < top
     const left = (face === 2) ? (mPos[2] - mPos[0] - mLen[0] + 1) : (mPos[2] - mPos[0] + 1)
     const right = (face === 2) ? (mPos[2] - mPos[0] - 1) : (mPos[2] + mLen[2] - mPos[0] - 1)
     const bottom = (face === 2) ? (mPos[2] - mPos[1] - mLen[1] + 1) : (mPos[0] - mPos[1] - mLen[1] + 1)
@@ -106,7 +107,6 @@ function filterObjs(pos: [number, number, number, number?][], mPos: [number, num
 
     pos.forEach(v => {
         let res = 0
-        // 0 Whole, 1: Left, 2: Right, 3: Hidden
         const x = v[2] - v[1], y = v[0] - v[1]
         const row = x - y, col = (face === 2) ? x : y
 
@@ -124,7 +124,6 @@ function filterObjs(pos: [number, number, number, number?][], mPos: [number, num
         }
         else
             res = 0
-        //console.log(row === right + 1, res)
 
         if (type !== 1)
             res = 3 - res
@@ -133,8 +132,6 @@ function filterObjs(pos: [number, number, number, number?][], mPos: [number, num
             v[3] = res
         else
             v.push(res)
-
-        //console.log(v, mPos, [x, y], [row, col], [left, right, bottom, top], res)
     })
 }
 
@@ -161,8 +158,6 @@ export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [num
         }
     }
 
-    //console.log(levelObjs.objs)
-
     if (levelObjs.mirror !== undefined) {
         filterObjs(realPoints, levelObjs.mirror.pos, levelObjs.mirror.len, 1)
         const mirrorPoints: [number, number, number, number?][] = getVirtualPos(levelObjs.mirror.objs)
@@ -176,16 +171,18 @@ export default function calcRoute(levelObjs: { objs: any[], mirror?: { pos: [num
     const tmp = []
     for (let i = 0; i < realPoints.length; ++i) {
         let flag = true
+        const d1x = realPoints[i][0] - realPoints[i][1] // -2
+        const d1y = realPoints[i][2] - realPoints[i][1] // -3
         const s1 = realPoints[i][3] || 0
         if (s1 === 3)
             continue
         for (let j = 0; j < realPoints.length; ++j) {
-            const d1x = realPoints[i][0] - realPoints[i][1] // -2
-            const d1y = realPoints[i][2] - realPoints[i][1] // -3
             const d2x = realPoints[j][0] - realPoints[j][1] // -3
             const d2y = realPoints[j][2] - realPoints[j][1] // -3
             const s2 = realPoints[j][3] || 0
-            if (realPoints[j][1] > realPoints[i][1] &&
+            if (s2 === 3)
+                continue
+            if ((realPoints[j][1] > realPoints[i][1]) &&
                 (((d1x === d2x) && (d1y === d2y + 1) && (s2 <= 1) && (s1 !== 1)) ||   // 从右上遮住
                     ((d1x === d2x + 1) && (d1y === d2y) && ((s2 & 1) === 0) && (s1 !== 2)) ||  // 从左上遮住
                     ((d1x === d2x + 1) && (d1y === d2y + 1) && (s2 < 3) && ((s2 === 0) || (s2 === s1))))) {     // 从正上方遮住

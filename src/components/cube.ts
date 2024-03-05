@@ -1,7 +1,7 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
 import { calcPos } from "@/base/methods";
-import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4, Vector3 } from "three"
+import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4 } from "three"
 
 class Cube extends Component {
     pos: [number, number, number];

@@ -1,6 +1,5 @@
 import Component from "@/base/component"
-import { unitWidth } from "@/base/constants"
-import { calcMirrorAngle } from "@/base/methods"
+import { unitWidth, type faceType } from "@/base/constants"
 import { Plane, Mesh, type ColorRepresentation, BoxGeometry, Vector3, MeshLambertMaterial, Raycaster } from "three"
 
 const calcPos = (p: number, l: number = 1): number => {
@@ -14,7 +13,7 @@ class Rotator extends Component {
     mirrorInfo: { face: number } = { face: 0 }
     plane: Plane;
     angle: number;
-    face: number;
+    face: [faceType, faceType];
     enabled: boolean = true;
     direction: number = 1; // 0:x, 1:y, 2:z
     angleAccumulate: number = 0;
@@ -26,7 +25,7 @@ class Rotator extends Component {
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [4, 4]
         this.angle = args?.[3] || 0
-        this.face = args?.[5] || 0
+        this.face = args?.[5] || ["+x", "+y"]
         this.direction = args?.[4] || 0
         this.plane = new Plane(new Vector3(0, 1, 0), -calcPos(this.pos[1], 1))
         this.color = args?.[2] || "#fb8888"
@@ -35,13 +34,49 @@ class Rotator extends Component {
         this.setDirection(this.direction)
     }
 
-    setFace(face: number) {
-        this.face = ((face || 0) % 4 + 4) % 4
+    setFace(face: [faceType, faceType]) {
+        this.face = face
         const c1 = this.children[0] as Mesh
         const c2 = this.children[1] as Mesh
-        c1.geometry.dispose()
-        c2.geometry.dispose()
-        switch (face) {
+
+        function setBoxGeometry(c: Mesh, len: number, axis: ("x" | "y" | "z")) {
+            c.geometry.dispose()
+            const dimensions = {
+                "x": [len, 1, 1],
+                "y": [1, len, 1],
+                "z": [1, 1, len]
+            };
+            const dimensionsForAxis = dimensions[axis] as [number, number, number];
+            c.geometry = new BoxGeometry(...dimensionsForAxis.map(value => unitWidth * value));
+        }
+
+        const axis1 = face[0][1] as ("x" | "y" | "z");
+        setBoxGeometry(c1, this.len[0], axis1);
+
+        const axisValues = ["x", "y", "z"] as ("x" | "y" | "z")[];
+
+        for (const i of axisValues) {
+            if (i === axis1) {
+                const offset = face[0][0] === "+" ? -1 / 2 : (1 / 2 - this.len[0]);
+                c1.position[i] = calcPos(offset, this.len[0]);
+            } else {
+                c1.position[i] = calcPos(-1 / 2);
+            }
+        }
+
+        const axis2 = face[1][1] as ("x" | "y" | "z");
+        setBoxGeometry(c2, this.len[1], axis2);
+
+        for (const i of axisValues) {
+            if (i === axis2) {
+                const offset = face[1][0] === "+" ? -1 / 2 : (1 / 2 - this.len[1]);
+                c2.position[i] = calcPos(offset, this.len[1]);
+            } else {
+                c2.position[i] = calcPos(-1 / 2);
+            }
+        }
+
+        /*switch (face) {
             case 0:
                 c1.geometry = new BoxGeometry(unitWidth * this.len[0], unitWidth, unitWidth)
 
@@ -94,8 +129,11 @@ class Rotator extends Component {
                 c2.position.y = calcPos(-1 / 2)
                 c2.position.z = calcPos(-1 / 2)
                 break;
-        }
-        this.mirrorComponent?.setFace(this.face)
+        }*/
+        this.mirrorComponent?.setFace([
+            ((face[0][0] === "-") ? "+" : "-") + face[0][1],
+            ((face[1][0] === "-") ? "+" : "-") + face[1][1],
+        ])
     }
 
     setDirection(direction: number) {
@@ -247,7 +285,7 @@ class Rotator extends Component {
 
         console.log(this.angle)
         this.mirrorComponent?.setAngle(this.angle * ((this.mirrorInfo.face === this.direction) ? 1 : -1))
-        console.log(this.mirrorComponent.rotation)
+        console.log(this.mirrorComponent?.rotation)
     }
 }
 

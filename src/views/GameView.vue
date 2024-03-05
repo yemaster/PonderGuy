@@ -42,7 +42,7 @@ const camera = new OrthographicCamera(
     500
 )
 let renderer!: WebGLRenderer
-camera.position.set(200, 200, 200)
+camera.position.set(250, 250, 250)
 camera.lookAt(scene.position)
 scene.add(camera)
 

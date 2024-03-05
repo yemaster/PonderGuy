@@ -185,7 +185,7 @@ export default class Designer {
                 d.setDirection(info.direction)
             if ((info.face || info.face === 0) && d.setFace)
                 d.setFace(info.face)
-            console.log(d.name, info.pos)
+            //console.log(d.name, info.pos)
         }
         if (this.mirror)
             this.mirror.updateMirrorCubePos()

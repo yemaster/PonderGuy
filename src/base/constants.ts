@@ -1,4 +1,6 @@
-export const unitWidth = 12
+export const unitWidth = 8
+
+export type faceType = "+x" | "+y" | "+z" | "-x" | "-y" | "-z"
 
 export type CubeInfo = {
     type: "Cube";
@@ -28,7 +30,7 @@ export type RotatorInfo = {
     size: [number, number];
     angle: number;
     direction: number;
-    face: number;
+    face: [faceType, faceType];
     range?: never;
     color?: string;
 }

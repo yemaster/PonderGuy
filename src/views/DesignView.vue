@@ -21,8 +21,8 @@ const leftControl = ref()
 
 const levelInfo: Ref<levelData> = ref({
     background: "#feffbd",
-    start: [0, 0, 0],
-    dests: [[0, 0, 1]],
+    start: [15, 15, 15],
+    dests: [[15, 15, 16]],
     objects: []
 })
 
@@ -250,8 +250,8 @@ function changeStartPos() {
 }
 
 function addDestPos() {
-    levelInfo.value.dests.push([0, 0, 1])
-    designer.addNewTingyun([0, 0, 1])
+    levelInfo.value.dests.push([15, 15, 16])
+    designer.addNewTingyun([15, 15, 16])
 }
 function deleteDestPos(p: number) {
     levelInfo.value.dests.splice(p, 1)
@@ -271,7 +271,7 @@ const objNameTrans = ref({
 let lastPos: [number, number, number] = [0, 0, 0]
 function addObject(type: string) {
     let objInfo!: objectInfo
-    lastPos[0]++
+    lastPos[1]++
     switch (type) {
         case "Cube":
             objInfo = { type, pos: lastPos, color: "#54c8ff" }
@@ -280,7 +280,7 @@ function addObject(type: string) {
             objInfo = { type, pos: lastPos, size: [1, 1, 4], range: [[0, 0], [0, 0], [0, 0]], color: "#ffe21f" }
             break
         case "Rotator":
-            objInfo = { type, pos: lastPos, size: [4, 4], face: 0, direction: 1, angle: 0, color: "#fb8888" }
+            objInfo = { type, pos: lastPos, size: [4, 4], face: ["+x", "+z"], direction: 1, angle: 0, color: "#fb8888" }
     }
     levelInfo.value.objects.push(objInfo)
     designer.addNewObject(objInfo)
@@ -364,6 +364,8 @@ function importLevel() {
             levelInfo.value.mirror = levelRawData.mirror
             changeMirror()
         }
+
+        document.getElementById("closeModelButton")?.click()
     }
     catch (e) {
         errorInfo.value = `导入失败!\n${e}`
@@ -499,8 +501,24 @@ function importLevel() {
                                         </div>
                                         <div class="form-group mb-3">
                                             <label class="form-label">摆放方向</label>
-                                            <input type="number" min="0" max="3" class="form-control" placeholder="最小值"
-                                                v-model="o.face" @change="changeObj(i)">
+                                            <div class="input-group">
+                                                <select class="form-control" v-model="o.face[0]" @change="changeObj(i)">
+                                                    <option value="+x">+x</option>
+                                                    <option value="+y">+y</option>
+                                                    <option value="+z">+z</option>
+                                                    <option value="-x">-x</option>
+                                                    <option value="-y">-y</option>
+                                                    <option value="-z">-z</option>
+                                                </select>
+                                                <select class="form-control" v-model="o.face[1]" @change="changeObj(i)">
+                                                    <option value="+x">+x</option>
+                                                    <option value="+y">+y</option>
+                                                    <option value="+z">+z</option>
+                                                    <option value="-x">-x</option>
+                                                    <option value="-y">-y</option>
+                                                    <option value="-z">-z</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <div class="form-group mb-3">
                                             <label class="form-label">旋转面</label>
@@ -619,7 +637,8 @@ function importLevel() {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" v-if="levelDataSetMode === '导入'"
                         @click="importLevel">确定</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" id="closeModelButton" class="btn btn-secondary"
+                        data-bs-dismiss="modal">取消</button>
                 </div>
             </div>
         </div>
