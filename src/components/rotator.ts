@@ -36,6 +36,7 @@ class Rotator extends Component {
 
     setFace(face: [faceType, faceType]) {
         this.face = face
+        console.log(face)
         const c1 = this.children[0] as Mesh
         const c2 = this.children[1] as Mesh
 
@@ -76,63 +77,16 @@ class Rotator extends Component {
             }
         }
 
-        /*switch (face) {
-            case 0:
-                c1.geometry = new BoxGeometry(unitWidth * this.len[0], unitWidth, unitWidth)
-
-                c1.position.x = calcPos(-1 / 2, this.len[0])
-                c1.position.y = calcPos(-1 / 2)
-                c1.position.z = calcPos(-1 / 2)
-
-                c2.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[1])
-
-                c2.position.x = calcPos(-1 / 2)
-                c2.position.y = calcPos(-1 / 2)
-                c2.position.z = calcPos(-1 / 2, this.len[1])
-                break;
-            case 1:
-                c1.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[0])
-
-                c1.position.x = calcPos(-1 / 2)
-                c1.position.y = calcPos(-1 / 2)
-                c1.position.z = calcPos((1 / 2 - this.len[0]), this.len[0])
-
-                c2.geometry = new BoxGeometry(unitWidth * this.len[1], unitWidth, unitWidth)
-
-                c2.position.x = calcPos(-1 / 2, this.len[1])
-                c2.position.y = calcPos(-1 / 2)
-                c2.position.z = calcPos(-1 / 2)
-                break;
-            case 2:
-                c1.geometry = new BoxGeometry(unitWidth * this.len[0], unitWidth, unitWidth)
-
-                c1.position.x = calcPos((1 / 2 - this.len[0]), this.len[0])
-                c1.position.y = calcPos(-1 / 2)
-                c1.position.z = calcPos(-1 / 2)
-
-                c2.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[1])
-
-                c2.position.x = calcPos(-1 / 2)
-                c2.position.y = calcPos(-1 / 2)
-                c2.position.z = calcPos((1 / 2 - this.len[1]), this.len[1])
-                break;
-            case 3:
-                c1.geometry = new BoxGeometry(unitWidth, unitWidth, unitWidth * this.len[0])
-
-                c1.position.x = calcPos(-1 / 2)
-                c1.position.y = calcPos(-1 / 2)
-                c1.position.z = calcPos(-1 / 2, this.len[0])
-
-                c2.geometry = new BoxGeometry(unitWidth * this.len[1], unitWidth, unitWidth)
-
-                c2.position.x = calcPos((1 / 2 - this.len[1]), this.len[1])
-                c2.position.y = calcPos(-1 / 2)
-                c2.position.z = calcPos(-1 / 2)
-                break;
-        }*/
+        function reverseFace(f: ("+" | "-")) {
+            if (f === "+")
+                return "-"
+            else
+                return "+"
+        }
+        const mirrorAxis = ["x", "y", "z"][this.mirrorInfo.face]
         this.mirrorComponent?.setFace([
-            ((face[0][0] === "-") ? "+" : "-") + face[0][1],
-            ((face[1][0] === "-") ? "+" : "-") + face[1][1],
+            (face[0][1] !== mirrorAxis ? face[0][0] : reverseFace(face[0][0] as ("+" | "-"))) + face[0][1],
+            (face[1][1] !== mirrorAxis ? face[1][0] : reverseFace(face[1][0] as ("+" | "-"))) + face[1][1],
         ])
     }
 
@@ -283,9 +237,9 @@ class Rotator extends Component {
 
         this.position.set(unitWidth * (this.pos[0] + 1 / 2), unitWidth * (this.pos[1] + 1 / 2), unitWidth * (this.pos[2] + 1 / 2))
 
-        console.log(this.angle)
+        //console.log(this.angle)
         this.mirrorComponent?.setAngle(this.angle * ((this.mirrorInfo.face === this.direction) ? 1 : -1))
-        console.log(this.mirrorComponent?.rotation)
+        //console.log(this.mirrorComponent?.rotation)
     }
 }
 

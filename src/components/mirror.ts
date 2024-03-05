@@ -47,6 +47,15 @@ export default class Mirror extends Component {
         const scene = s || (this.parent as Scene)
         const face = this.len[0] === 0 ? 0 : 2
 
+        const mirrorAxis = ["x", "y", "z"][face]
+
+        function reverseFace(f: ("+" | "-")) {
+            if (f === "+")
+                return "-"
+            else
+                return "+"
+        }
+
         this.realObjs.forEach((v: any) => {
             let tmpObj: any
             let tmpPos: [number, number, number]
@@ -56,7 +65,7 @@ export default class Mirror extends Component {
                         v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
                         break
                     case "Drawbox":
-                        console.log(v.pos, v.mirrorComponent.pos)
+                        //console.log(v.pos, v.mirrorComponent.pos)
                         tmpPos = calcMirrorPos(v.pos, this.pos, face)
                         tmpPos[face] -= v.len[face] - 1
                         v.mirrorComponent.setPos(tmpPos)
@@ -88,8 +97,10 @@ export default class Mirror extends Component {
                         break
                     case "Rotator":
                         tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), [v.len[1], v.len[0]], v.color, v.angle * ((v.direction === face) ? 1 : -1), v.direction,
-                            ((v.face[0][0] === "-") ? "+" : "-") + v.face[0][1],
-                            ((v.face[1][0] === "-") ? "+" : "-") + v.face[1][1])
+                            [
+                                (v.face[0][1] !== mirrorAxis ? v.face[0][0] : reverseFace(v.face[0][0] as ("+" | "-"))) + v.face[0][1],
+                                (v.face[1][1] !== mirrorAxis ? v.face[1][0] : reverseFace(v.face[1][0] as ("+" | "-"))) + v.face[1][1],
+                            ])
                         tmpObj.enabled = false
                         v.mirrorComponent = tmpObj
                         v.mirrorInfo = {

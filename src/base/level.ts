@@ -1,7 +1,7 @@
 // Three.js & Core components
 import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction } from "three"
 import calcRoute from "@/base/calcRoute"
-import { unitWidth, type objectInfo } from "./constants";
+import { unitWidth, type objectInfo, type levelData } from "./constants";
 import Plane from "@/components/plane"
 import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
@@ -30,15 +30,33 @@ class Level {
     allCubes: any[] = [];
     mirror: Mirror | undefined;
     level: number;
+    levelData: string = "";
     animation!: { mixer: AnimationMixer, animations: { "Running": AnimationAction, "Standing": AnimationAction } };
-    constructor(level: number, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer) {
-        this.level = level
+    constructor(level: number | string, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer, onError: Function = (e: any) => { console.log(e) }) {
+        if (typeof level === 'string')
+            this.level = -1
+        else
+            this.level = level
         this.scene = scene
         this.camera = camera
         this.renderer = renderer
         this.movableObjects = []
 
-        this.setupScene()
+        if (typeof level === "string") {
+            try {
+                this.setupScene(JSON.parse(atob(level)))
+            }
+            catch (e) {
+                onError(e)
+            }
+        }
+        else {
+            axios.get(`/levels/level${this.level}.json`).then(res => {
+                this.setupScene(res.data)
+            }).catch(e => {
+                onError(e)
+            })
+        }
     }
     check(): Vector3[] | null {
         if (this.startPos === undefined || this.destPos.length <= this.nowStage)
@@ -54,71 +72,66 @@ class Level {
             } : undefined
         }, pos1, pos2)
     }
-    setupScene(): void {
-        axios.get(`/levels/level${this.level}.json`).then(res => {
-            const levelInfo = res.data
-            this.scene.background = new Color(levelInfo.background || "#feffbd")
+    setupScene(levelInfo: levelData): void {
+        this.scene.background = new Color(levelInfo.background || "#feffbd")
 
-            this.startPos = new Vector3().fromArray(levelInfo.start)
-            this.destPos = []
-            levelInfo.dests.forEach((v: number[]) => {
-                this.destPos.push(new Vector3().fromArray(v))
-            })
-            this.setupPonder(this.startPos)
+        this.startPos = new Vector3().fromArray(levelInfo.start)
+        this.destPos = []
+        levelInfo.dests.forEach((v: number[]) => {
+            this.destPos.push(new Vector3().fromArray(v))
+        })
+        this.setupPonder(this.startPos)
 
-            const dragObjs: any[] = []
+        const dragObjs: any[] = []
 
-            levelInfo.objects.forEach((v: objectInfo) => {
-                let tmpDrawbox: DrawBox
-                let obj: any
-                switch (v.type) {
-                    case "Cube":
-                        obj = new Cube(v.pos, v.color)
-                        this.scene.add(obj)
-                        this.allCubes.push(obj)
-                        break
-                    case "Plane":
-                        this.scene.add(new Plane(v.pos, v.color).obj)
-                        break
-                    case "Drawbox":
-                        tmpDrawbox = new DrawBox(v.pos, v.size, v.range, v.color)
-                        this.scene.add(tmpDrawbox)
-                        this.allCubes.push(tmpDrawbox)
-                        dragObjs.push(tmpDrawbox)
-                        break
-                    case "Rotator":
-                        obj = new Rotator(v.pos, v.size, v.color, v.angle, v.direction, v.face)
-                        this.scene.add(obj)
-                        this.allCubes.push(obj)
-                        break
-                }
-            })
-            if (levelInfo.mirror) {
-                this.mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size, levelInfo.mirror.range)
-                this.mirror.setupMirrorCubes(this.allCubes, this.scene)
-                this.scene.add(this.mirror)
-                dragObjs.push(...this.mirror.children)
+        levelInfo.objects.forEach((v: objectInfo) => {
+            let tmpDrawbox: DrawBox
+            let obj: any
+            switch (v.type) {
+                case "Cube":
+                    obj = new Cube(v.pos, v.color)
+                    this.scene.add(obj)
+                    this.allCubes.push(obj)
+                    break
+                case "Plane":
+                    this.scene.add(new Plane(v.pos, v.color).obj)
+                    break
+                case "Drawbox":
+                    tmpDrawbox = new DrawBox(v.pos, v.size, v.range, v.color)
+                    this.scene.add(tmpDrawbox)
+                    this.allCubes.push(tmpDrawbox)
+                    dragObjs.push(tmpDrawbox)
+                    break
+                case "Rotator":
+                    obj = new Rotator(v.pos, v.size, v.color, v.angle, v.direction, v.face)
+                    this.scene.add(obj)
+                    this.allCubes.push(obj)
+                    break
             }
+        })
+        if (levelInfo.mirror) {
+            this.mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size, levelInfo.mirror.range)
+            this.mirror.setupMirrorCubes(this.allCubes, this.scene)
+            this.scene.add(this.mirror)
+            dragObjs.push(...this.mirror.children)
+        }
 
-            // Setup up united drag control
-            this.uniteDragControl = new DragControls(dragObjs, this.camera, this.renderer.domElement)
-            this.uniteDragControl.addEventListener("dragstart", (e) => {
-                const target = e.object.parent as any
-                if (target.onControlDragStart)
-                    target.onControlDragStart(e)
-            })
-            this.uniteDragControl.addEventListener("drag", (e) => {
-                const target = e.object.parent as any
-                if (target.onControlDrag)
-                    target.onControlDrag(e)
-            })
-            this.uniteDragControl.addEventListener("dragend", (e) => {
-                const target = e.object.parent as any
-                if (target.onControlDragEnd)
-                    target.onControlDragEnd(e)
-            })
-        }).catch((e) => {
-            console.log("Cannot import level file!", e)
+        // Setup up united drag control
+        this.uniteDragControl = new DragControls(dragObjs, this.camera, this.renderer.domElement)
+        this.uniteDragControl.addEventListener("dragstart", (e) => {
+            const target = e.object.parent as any
+            if (target.onControlDragStart)
+                target.onControlDragStart(e)
+        })
+        this.uniteDragControl.addEventListener("drag", (e) => {
+            const target = e.object.parent as any
+            if (target.onControlDrag)
+                target.onControlDrag(e)
+        })
+        this.uniteDragControl.addEventListener("dragend", (e) => {
+            const target = e.object.parent as any
+            if (target.onControlDragEnd)
+                target.onControlDragEnd(e)
         })
     }
     setupPonder(pos: Vector3) {

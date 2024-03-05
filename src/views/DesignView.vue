@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from "vue"
+import { RouterLink } from 'vue-router'
 import { unitWidth, type levelData, type objectInfo } from "@/base/constants"
 
 // bootstrap
@@ -274,13 +275,13 @@ function addObject(type: string) {
     lastPos[1]++
     switch (type) {
         case "Cube":
-            objInfo = { type, pos: lastPos, color: "#54c8ff" }
+            objInfo = { type, pos: Array.from(lastPos) as [number, number, number], color: "#54c8ff" }
             break
         case "Drawbox":
-            objInfo = { type, pos: lastPos, size: [1, 1, 4], range: [[0, 0], [0, 0], [0, 0]], color: "#ffe21f" }
+            objInfo = { type, pos: Array.from(lastPos) as [number, number, number], size: [1, 1, 4], range: [[0, 0], [0, 0], [0, 0]], color: "#ffe21f" }
             break
         case "Rotator":
-            objInfo = { type, pos: lastPos, size: [4, 4], face: ["+x", "+z"], direction: 1, angle: 0, color: "#fb8888" }
+            objInfo = { type, pos: Array.from(lastPos) as [number, number, number], size: [4, 4], face: ["+x", "+z"], direction: 1, angle: 0, color: "#fb8888" }
     }
     levelInfo.value.objects.push(objInfo)
     designer.addNewObject(objInfo)
@@ -380,6 +381,8 @@ function importLevel() {
                 <li class="list-group-item sticky-top">
                     <h4>关卡设计器</h4>
                     <div class="btn-group">
+                        <router-link class="btn btn-sm btn-outline-secondary" to="/game/list"
+                            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">返回</router-link>
                         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
                             data-bs-target="#exportModal" @click="importLevelBefore"
                             style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">导入</button>

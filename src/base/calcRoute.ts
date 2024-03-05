@@ -70,9 +70,9 @@ function getVirtualPos(arr: any[]) {
                     d2 = new Vector3()
                     d1[v.face[0][1] as ("x" | "y" | "z")] = v.face[0][0] === "-" ? -1 : 1
                     d2[v.face[1][1] as ("x" | "y" | "z")] = v.face[1][0] === "-" ? -1 : 1
-                    console.log(d1, d2)
+                    //console.log(d1, d2)
                     rotQuaternion = new Quaternion().setFromAxisAngle(directionVectors[v.direction], v.angle * Math.PI / 2)
-                    console.log(directionVectors[v.direction])
+                    //console.log(directionVectors[v.direction])
                     d1.applyQuaternion(rotQuaternion).round()
                     d2.applyQuaternion(rotQuaternion).round()
 

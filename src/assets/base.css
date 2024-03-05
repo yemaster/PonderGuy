@@ -44,3 +44,50 @@ body {
     background: #e0e0e0;
     opacity: 1;
 }
+
+a {
+    text-decoration: none !important;
+    color: #1780db;
+}
+
+a:hover {
+    color: #37a0fb;
+}
+
+.cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+
+    background-color: #fff;
+
+    opacity: 0;
+    transition: opacity .5s;
+    visibility: hidden;
+
+    z-index: 2;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    padding: 3px 8px;
+    opacity: .5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
+    font-family: "genshin";
+    font-size: 12px;
+    max-width: 50px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: all .5s cubic-bezier(1, 0.02, 1, 0.04);
+    z-index: 10;
+}
+
+.footer:hover {
+    opacity: 1;
+    max-width: 100%;
+}

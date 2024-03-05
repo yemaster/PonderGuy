@@ -18,7 +18,10 @@ import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 // Get level id
 let nowLevel: Level
-const levelId = ref(Number(route.params.id))
+const isCustom = ref(false)
+if (route.params.id === "custom")
+    isCustom.value = true
+const levelId = ref(Number(route.params.id) || 0)
 document.title = `关卡#${levelId.value} | Ponder Guy`
 const fog = ref()
 const levelShow = ref()
@@ -147,8 +150,8 @@ const setupScene = () => {
         alpha: true,
     })
     renderer.localClippingEnabled = true
-    
-    nowLevel = new Level(levelId.value, scene, camera, renderer)
+
+    nowLevel = new Level(isCustom.value ? localStorage.levelData : levelId.value, scene, camera, renderer, (e: any) => { alert(e); router.push("/game/list") })
     picker.updateObjs(scene.children)
 
     const oc = new OrbitControls(camera, renderer.domElement)
@@ -252,7 +255,10 @@ window.addEventListener("resize", debounce(canvasResizeHandler, 100))
 
 <template>
     <div class="fog" ref="fog">
-        <div class="level-show" ref="levelShow">Level {{ levelId }}</div>
+        <div class="level-show" ref="levelShow">
+            <template v-if="isCustom">自定义关卡</template>
+            <template v-else>Level {{ levelId }}</template>
+        </div>
     </div>
     <div class="pg-game-container">
         <canvas id="pg-canvas"></canvas>

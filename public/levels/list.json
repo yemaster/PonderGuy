@@ -1,7 +1,12 @@
 {
     "levels": [
-        "启程",
-        "",
-        ""
+        {
+            "name": "启程",
+            "img": "/imgs/level.png"
+        },
+        {
+            "name": "",
+            "img": "/imgs/level.png"
+        }
     ]
 }
