@@ -2,6 +2,7 @@
 // Vue core modules
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -14,7 +15,10 @@ import Picker from '@/base/picker'
 import Level from '@/base/level'
 
 import debounce from 'lodash.debounce'
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { OrbitControls } from 'three/examples/jsm/Addons.js'
+
+// Icons
+import iconMenu from '@/components/icons/iconMenu.vue'
 
 // Get level id
 let nowLevel: Level
@@ -47,6 +51,7 @@ const camera = new OrthographicCamera(
 let renderer!: WebGLRenderer
 camera.position.set(250, 250, 250)
 camera.lookAt(scene.position)
+camera.zoom = 2
 scene.add(camera)
 
 // Setup lights
@@ -156,6 +161,7 @@ const setupScene = () => {
 
     const oc = new OrbitControls(camera, renderer.domElement)
     oc.enableRotate = false
+    oc.zoomToCursor = true
 
     canvas.addEventListener("mousedown", (e: MouseEvent) => {
         isObjectChosen = !(picker.pickedObject === undefined)
@@ -207,7 +213,7 @@ const setupScene = () => {
             fog.value.style.opacity = "0"
         }, 4000)
         setTimeout(() => {
-            router.replace(`/game/list?level=${levelId.value + 1}`)
+            router.replace(`/game/list`)
         }, 5000)
     }
 
@@ -251,17 +257,29 @@ scene.add(axesHelper)
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))
+
+function backLevel() {
+    fog.value.style.opacity = "1"
+    fog.value.style.visibility = "visible"
+    setTimeout(() => {
+        router.replace(`/game/list`)
+    }, 1000)
+}
 </script>
 
 <template>
     <div class="fog" ref="fog">
         <div class="level-show" ref="levelShow">
             <template v-if="isCustom">自定义关卡</template>
+
             <template v-else>Level {{ levelId }}</template>
         </div>
     </div>
     <div class="pg-game-container">
         <canvas id="pg-canvas"></canvas>
+    </div>
+    <div class="pg-back-button" @click="backLevel()">
+        <icon-menu></icon-menu>
     </div>
 </template>
 
@@ -303,5 +321,13 @@ window.addEventListener("resize", debounce(canvasResizeHandler, 100))
 #pg-canvas {
     width: 100% !important;
     height: 100% !important;
+}
+
+.pg-back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+
+    cursor: pointer;
 }
 </style>

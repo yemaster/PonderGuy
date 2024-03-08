@@ -7,6 +7,10 @@
         {
             "name": "",
             "img": "/imgs/level.png"
+        },
+        {
+            "name": "6",
+            "img": "/imgs/level.png"
         }
     ]
 }

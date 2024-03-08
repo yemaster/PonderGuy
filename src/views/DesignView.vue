@@ -22,8 +22,8 @@ const leftControl = ref()
 
 const levelInfo: Ref<levelData> = ref({
     background: "#feffbd",
-    start: [15, 15, 15],
-    dests: [[15, 15, 16]],
+    start: [0, 0, 0],
+    dests: [[0, 0, 5]],
     objects: []
 })
 
@@ -123,7 +123,7 @@ const setupScene = () => {
     renderer.localClippingEnabled = true
 
     designer = new Designer(scene, camera, renderer, levelInfo.value.start)
-    designer.addNewTingyun([0, 0, 1])
+    designer.addNewTingyun([0, 0, 5])
     designer.dragControl.enabled = false
 
     const oc = new OrbitControls(camera, renderer.domElement)
@@ -200,7 +200,7 @@ const setupScene = () => {
                     }, 300)
                 }
             }
-            if (["Cube", "Drawbox", "Rotator", "Mirror"].includes(p.name)) {
+            if (["Cube", "Drawbox", "Rotator"].includes(p.name)) {
                 if (p.name === "Rotator")
                     tc.attach(p)
                 else
@@ -251,8 +251,8 @@ function changeStartPos() {
 }
 
 function addDestPos() {
-    levelInfo.value.dests.push([15, 15, 16])
-    designer.addNewTingyun([15, 15, 16])
+    levelInfo.value.dests.push([0, 0, 1])
+    designer.addNewTingyun([0, 0, 1])
 }
 function deleteDestPos(p: number) {
     levelInfo.value.dests.splice(p, 1)

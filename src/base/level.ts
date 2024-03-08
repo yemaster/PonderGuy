@@ -1,5 +1,5 @@
 // Three.js & Core components
-import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction } from "three"
+import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Points, BufferGeometry, PointsMaterial } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth, type objectInfo, type levelData } from "./constants";
 import Plane from "@/components/plane"
@@ -8,9 +8,11 @@ import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import Mirror from "@/components/mirror"
 import { DragControls, GLTFLoader } from "three/examples/jsm/Addons.js"
+import { useStore } from "@/store";
 
 // Axios
 import axios from 'axios'
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 class Level {
     scene: Scene;
@@ -32,6 +34,8 @@ class Level {
     level: number;
     levelData: string = "";
     animation!: { mixer: AnimationMixer, animations: { "Running": AnimationAction, "Standing": AnimationAction } };
+    particles!: Points;
+    particlePositions: Vector3[] = [];
     constructor(level: number | string, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer, onError: Function = (e: any) => { console.log(e) }) {
         if (typeof level === 'string')
             this.level = -1
@@ -136,31 +140,39 @@ class Level {
     }
     setupPonder(pos: Vector3) {
         const loader = new GLTFLoader()
-        loader.load("/ponder.glb", (gltf) => {
-            //console.log(gltf)
-            this.ponder = gltf.scene
-            //console.log(gltf.animations)
-            this.ponder.scale.set(14.5, 14.5, 14.5)
-            this.ponder.position.set(
-                pos.x * unitWidth + unitWidth / 2 + 100,
-                (pos.y + 1) * unitWidth + 100,
-                pos.z * unitWidth + unitWidth / 2 + 100
-            )
-            this.scene.add(this.ponder)
+        loader.setMeshoptDecoder(MeshoptDecoder)
 
-            const mixer = new AnimationMixer(this.ponder)
-            this.animation = {
-                mixer,
-                animations: {
-                    Running: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Running")),
-                    Standing: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Standing")),
+        const store = useStore()
+        store.getPonder().then((data) => {
+            //console.log(data)
+            //const modelUrl = URL.createObjectURL(new Blob([data]))
+            //console.log(modelUrl)
+            loader.parse(data, "/", gltf => {
+                //console.log(gltf)
+                this.ponder = gltf.scene
+                //console.log(gltf.animations)
+                this.ponder.scale.set(14.5, 14.5, 14.5)
+                this.ponder.position.set(
+                    pos.x * unitWidth + unitWidth / 2 + 100,
+                    (pos.y + 1) * unitWidth + 100,
+                    pos.z * unitWidth + unitWidth / 2 + 100
+                )
+                this.scene.add(this.ponder)
+
+                const mixer = new AnimationMixer(this.ponder)
+                this.animation = {
+                    mixer,
+                    animations: {
+                        Running: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Running")),
+                        Standing: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Standing")),
+                    }
                 }
-            }
-            this.animation.animations.Running.play()
-            this.animation.animations.Running.weight = 0
-            this.animation.animations.Standing.play()
-            this.animation.animations.Standing.weight = 1
-            //console.log(this.scene)
+                this.animation.animations.Running.play()
+                this.animation.animations.Running.weight = 0
+                this.animation.animations.Standing.play()
+                this.animation.animations.Standing.weight = 1
+                //console.log(this.scene)
+            })
         })
         const ponderGeometry = new BoxGeometry(6, 12, 6)
         const tingyunMaterial = new MeshBasicMaterial({ color: 0xdb2828 })
@@ -181,6 +193,16 @@ class Level {
         )
         this.scene.add(this.walkHint)
         this.walkHint.visible = false
+
+        //const particleGeometry = new BufferGeometry();
+        //const particleMaterial = new PointsMaterial({
+        //    color: 0xffff00,
+        //    size: 0.1,
+        //    opacity: 0.5,
+        //})
+
+        //this.particles = new Points(particleGeometry, particleMaterial);
+        //this.scene.add(this.particles);
     }
     updateAnimation(t: number) {
         if (this.animation)
@@ -214,6 +236,12 @@ class Level {
             const dist = Math.sqrt(Math.pow((this.ponder.position.x - this.ponder.position.y - realTarget.x + realTarget.y), 2) + Math.pow((this.ponder.position.z - this.ponder.position.y - realTarget.z + realTarget.y), 2))
             if (dist < 0.8)
                 this.animateProgress++
+
+            //this.particlePositions.push(this.ponder.position.clone());
+            //if (this.particlePositions.length > 100)
+            //    this.particlePositions.shift()
+            //this.particles.geometry.setFromPoints(this.particlePositions)
+            //console.log(this.particles, this.particlePositions)
         }
         else {
             this.animateProgress = -5

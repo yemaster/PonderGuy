@@ -762,6 +762,13 @@ delayed-stream@~1.0.0:
   resolved "https://repo.huaweicloud.com/repository/npm/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==
 
+dexie@^3.2.6:
+  version "3.2.6"
+  resolved "https://repo.huaweicloud.com/repository/npm/dexie/-/dexie-3.2.6.tgz#c5980e4228d7e81744bb324c81459afa6604da41"
+  integrity sha512-R9VzQ27/cncQymoAeD1kfu66NUrdxcnMNXVfEoFLnQ+apVVbS4++veUcSGxft9V++zaeiLkMAREOMf8EwgR/Vw==
+  dependencies:
+    karma-safari-launcher "^1.0.0"
+
 dir-glob@^3.0.1:
   version "3.0.1"
   resolved "https://repo.huaweicloud.com/repository/npm/dir-glob/-/dir-glob-3.0.1.tgz"
@@ -1165,6 +1172,11 @@ json-stable-stringify-without-jsonify@^1.0.1:
   version "1.0.1"
   resolved "https://repo.huaweicloud.com/repository/npm/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz"
   integrity sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==
+
+karma-safari-launcher@^1.0.0:
+  version "1.0.0"
+  resolved "https://repo.huaweicloud.com/repository/npm/karma-safari-launcher/-/karma-safari-launcher-1.0.0.tgz#96982a2cc47d066aae71c553babb28319115a2ce"
+  integrity sha512-qmypLWd6F2qrDJfAETvXDfxHvKDk+nyIjpH9xIeI3/hENr0U3nuqkxaftq73PfXZ4aOuOChA6SnLW4m4AxfRjQ==
 
 keyv@^4.5.3:
   version "4.5.4"

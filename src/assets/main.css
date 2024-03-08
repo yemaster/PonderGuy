@@ -153,6 +153,21 @@
     transition: opacity .5s;
 }
 
+.pg-help-button {
+    position: absolute;
+    top: 65%;
+    left: 65%;
+    transform: translate(-60%, -50%);
+    font-size: 24px;
+    font-family: "genshin";
+    padding: 8px 24px;
+    border-top: 3px solid #212223;
+    border-bottom: 3px solid #212223;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .5s;
+}
+
 @media screen and (max-width: 976px) {
     .pg-header-logo {
         font-size: 52px;
@@ -199,4 +214,15 @@
 
 .pg-nav-item .pg-nav-link:hover {
     background-color: #eee;
+}
+
+.pg-icon {
+    width: 48px;
+    height: 48px;
+    stroke: #212223;
+    stroke-width: 1.125;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    color: #212223;
 }

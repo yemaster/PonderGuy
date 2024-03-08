@@ -4,6 +4,11 @@ import { useRouter } from 'vue-router'
 
 import { AmbientLight, AnimationClip, AnimationMixer, Clock, Color, DirectionalLight, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene, Vector3, WebGLRenderer } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+
+import { useStore } from '@/store'
+
+const store = useStore()
 
 import debounce from 'lodash.debounce'
 
@@ -69,14 +74,21 @@ const setupScene = () => {
     renderer = new WebGLRenderer({ antialias: true, canvas })
 
     const loader = new GLTFLoader()
-    loader.load("/ponder.glb", gltf => {
-        const ponder = gltf.scene
-        ponder.scale.set(15, 15, 15)
-        scene.add(ponder)
+    loader.setMeshoptDecoder(MeshoptDecoder)
 
-        mixer = new AnimationMixer(ponder)
-        const clip = mixer.clipAction(AnimationClip.findByName(gltf.animations, "Sitting"))
-        clip.play()
+    store.getPonder().then((data) => {
+        //console.log(data)
+        //const modelUrl = URL.createObjectURL(new Blob([data]))
+        //console.log(modelUrl)
+        loader.parse(data, "/", gltf => {
+            const ponder = gltf.scene
+            ponder.scale.set(15, 15, 15)
+            scene.add(ponder)
+
+            mixer = new AnimationMixer(ponder)
+            const clip = mixer.clipAction(AnimationClip.findByName(gltf.animations, "Sitting"))
+            clip.play()
+        })
     })
     canvasResizeHandler()
     requestAnimationFrame(render);
@@ -85,13 +97,17 @@ const setupScene = () => {
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))
 
 onMounted(() => {
+    cover.value.style.visibility = "visible"
+    cover.value.style.opacity = "1"
+    setupScene()
     setTimeout(() => {
         cl.value.style.opacity = "1"
     }, 100)
     setTimeout(() => {
         cl.value.style.opacity = "0"
         fog.value.style.opacity = "0"
-        setupScene()
+        cover.value.style.opacity = "0"
+        cover.value.style.visibility = "hidden"
     }, 2000)
     setTimeout(() => {
         pageHeader.value.style.opacity = "1"
@@ -108,6 +124,14 @@ function gotoList() {
     cover.value.style.opacity = "1"
     setTimeout(() => {
         router.push("/game/list")
+    }, 500)
+}
+
+function gotoHelp() {
+    cover.value.style.visibility = "visible"
+    cover.value.style.opacity = "1"
+    setTimeout(() => {
+        router.push("/help")
     }, 500)
 }
 
@@ -138,7 +162,7 @@ function gotoList() {
     background-color: rgba(255, 255, 255, .8);
     backdrop-filter: blur(5px);
     opacity: 1;
-    z-index: 1;
+    z-index: 21;
 
     transition: opacity .5s;
 }

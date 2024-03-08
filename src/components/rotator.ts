@@ -36,7 +36,7 @@ class Rotator extends Component {
 
     setFace(face: [faceType, faceType]) {
         this.face = face
-        console.log(face)
+        //console.log(face)
         const c1 = this.children[0] as Mesh
         const c2 = this.children[1] as Mesh
 
@@ -95,6 +95,7 @@ class Rotator extends Component {
         this.setAngle(this.angle)
         //console.log("Direction:", this.direction, this.pos)
         this.plane = new Plane(new Vector3(Number(this.direction === 0), Number(this.direction === 1), Number(this.direction === 2)), -calcPos(this.pos[this.direction], 1))
+        this.mirrorComponent?.setDirection(this.direction)
     }
 
     setAngle(angle: number) {
@@ -106,6 +107,8 @@ class Rotator extends Component {
         this.rotation.x = rot[0]
         this.rotation.y = rot[1]
         this.rotation.z = rot[2]
+
+        this.mirrorComponent?.setAngle(this.angle * ((this.mirrorInfo.face === this.direction) ? 1 : -1))
     }
 
     setPos(pos: [number, number, number]) {

@@ -41,6 +41,8 @@ function goBack() {
       </ul>
       部分参考：<a href="https://juejin.cn/post/7067122410457137165"
         target="_blank">https://juejin.cn/post/7067122410457137165</a>
+      镜子的实现参考：<a href="https://www.bilibili.com/video/BV1kJ4m1W76K/"
+        target="_blank">https://www.bilibili.com/video/BV1kJ4m1W76K/</a>
       </p>
     </div>
   </div>
