@@ -1,7 +1,7 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
-import { calcPos } from "@/base/methods";
-import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4 } from "three"
+import { calcPos, isCollide } from "@/base/methods";
+import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4, Box3 } from "three"
 
 class Cube extends Component {
     pos: [number, number, number];
@@ -46,6 +46,12 @@ class Cube extends Component {
             this.mirrorComponent.children.forEach((v: any) => {
                 v?.material?.color.setStyle(color)
             })
+    }
+
+    detechCollide(box: Box3): boolean {
+        const box1 = this.children[0] as Mesh
+        const myBox = new Box3().setFromObject(box1)
+        return isCollide(box, myBox)
     }
 }
 (Cube as any).cnName = "正方体";

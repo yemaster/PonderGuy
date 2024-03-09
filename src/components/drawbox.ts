@@ -1,7 +1,7 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
-import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry } from "three"
-import { calcMirrorPos } from "@/base/methods"
+import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry, Box3 } from "three"
+import { calcMirrorPos, isCollide } from "@/base/methods"
 
 const calcPos = (p: number, l: number = 1): number => {
     return p * unitWidth + unitWidth * (l || 1) / 2
@@ -50,6 +50,12 @@ class DrawBox extends Component {
             e.position.y = calcPos(pos[1], this.len[1])
             e.position.z = calcPos(pos[2], this.len[2])
         })
+
+        if (this.mirrorComponent) {
+            const tmpPos = calcMirrorPos(this.pos, this.mirrorInfo.pos, this.mirrorInfo.face)
+            tmpPos[this.mirrorInfo.face] -= this.len[this.mirrorInfo.face] - 1;
+            this.mirrorComponent.setPos(tmpPos)
+        }
     }
 
     setSize(size: [number, number, number]) {
@@ -90,6 +96,7 @@ class DrawBox extends Component {
             }
             else
                 tmp[i] = calcPos(this.pos[i], this.len[i])
+            this.pos[i] = fixPos(tmp[i], this.len[i])
         }
         e.object.position.fromArray(tmp)
 
@@ -120,6 +127,12 @@ class DrawBox extends Component {
     }
 
     onDragEnd() { }
+
+    detechCollide(box: Box3): boolean {
+        const box1 = this.children[0] as Mesh
+        const myBox = new Box3().setFromObject(box1)
+        return isCollide(box, myBox)
+    }
 }
 
 export default DrawBox

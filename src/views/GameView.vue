@@ -197,24 +197,24 @@ const setupScene = () => {
         setTimeout(() => {
             fog.value.style.visibility = "visible"
             fog.value.style.opacity = "1"
-        }, 1000)
+        }, 200)
         setTimeout(() => {
             levelShow.value.style.opacity = "1"
-        }, 1300)
+        }, 500)
         setTimeout(() => {
             levelShow.value.style.transition = "all .2s"
             levelShow.value.style.opacity = "0"
-        }, 2100)
+        }, 1300)
         setTimeout(() => {
             levelShow.value.innerText = "Finish!"
             levelShow.value.style.opacity = "1"
-        }, 2300)
+        }, 1500)
         setTimeout(() => {
             fog.value.style.opacity = "0"
-        }, 4000)
+        }, 3200)
         setTimeout(() => {
             router.replace(`/game/list`)
-        }, 5000)
+        }, 4200)
     }
 
     // Animate three.js scene
@@ -252,8 +252,8 @@ const setupScene = () => {
         fog.value.style.visibility = "hidden"
     }, 2200)
 }
-const axesHelper = new AxesHelper(100)
-scene.add(axesHelper)
+//const axesHelper = new AxesHelper(100)
+//scene.add(axesHelper)
 
 onMounted(setupScene)
 window.addEventListener("resize", debounce(canvasResizeHandler, 100))

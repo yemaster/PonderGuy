@@ -1,4 +1,4 @@
-import { Group } from "three"
+import { Box3, Group } from "three"
 import { v4 } from "uuid"
 
 export default abstract class Component extends Group {
@@ -18,4 +18,5 @@ export default abstract class Component extends Group {
         return this
     }
     abstract generateElement(...args: any): void;
+    abstract detechCollide(box: Box3): boolean;
 }

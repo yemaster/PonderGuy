@@ -1,3 +1,4 @@
+import type { Box3 } from "three"
 import { unitWidth } from "./constants"
 
 export const calcPos = (p: number, l: number = 1, tp: boolean = false): number => {
@@ -24,4 +25,14 @@ export const calcMirrorAngle = (angle: number, face: number = 2) => {
     if (angle <= 1)
         return 1 - angle
     return 5 - angle
+}
+
+export const isCollide = (box1: Box3, box2: Box3): boolean => {
+    if (box1.max.x <= box2.min.x || box1.min.x >= box2.max.x)
+        return false
+    if (box1.max.y <= box2.min.y || box1.min.y >= box2.max.y)
+        return false
+    if (box1.max.z <= box2.min.z || box1.min.z >= box2.max.z)
+        return false
+    return true
 }

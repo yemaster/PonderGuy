@@ -1,6 +1,7 @@
 import Component from "@/base/component"
 import { unitWidth, type faceType } from "@/base/constants"
-import { Plane, Mesh, type ColorRepresentation, BoxGeometry, Vector3, MeshLambertMaterial, Raycaster } from "three"
+import { isCollide } from "@/base/methods"
+import { Plane, Mesh, type ColorRepresentation, BoxGeometry, Vector3, MeshLambertMaterial, Raycaster, Box3 } from "three"
 
 const calcPos = (p: number, l: number = 1): number => {
     return (p || 0) * unitWidth + unitWidth * (l || 1) / 2
@@ -243,6 +244,15 @@ class Rotator extends Component {
         //console.log(this.angle)
         this.mirrorComponent?.setAngle(this.angle * ((this.mirrorInfo.face === this.direction) ? 1 : -1))
         //console.log(this.mirrorComponent?.rotation)
+    }
+
+
+    detechCollide(box: Box3): boolean {
+        const box1 = this.children[0] as Mesh
+        const box2 = this.children[0] as Mesh
+        const myBox1 = new Box3().setFromObject(box1)
+        const myBox2 = new Box3().setFromObject(box2)
+        return isCollide(box, myBox1) || isCollide(box, myBox2)
     }
 }
 

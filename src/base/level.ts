@@ -1,5 +1,5 @@
 // Three.js & Core components
-import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Points, BufferGeometry, PointsMaterial } from "three"
+import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Points, BufferGeometry, PointsMaterial, BufferAttribute, Box3 } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth, type objectInfo, type levelData } from "./constants";
 import Plane from "@/components/plane"
@@ -34,8 +34,9 @@ class Level {
     level: number;
     levelData: string = "";
     animation!: { mixer: AnimationMixer, animations: { "Running": AnimationAction, "Standing": AnimationAction } };
-    particles!: Points;
-    particlePositions: Vector3[] = [];
+    particleGeometry: BufferGeometry = new BufferGeometry();
+    particlePositions: Float32Array = new Float32Array(20 * 3);
+    particle: Points;
     constructor(level: number | string, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer, onError: Function = (e: any) => { console.log(e) }) {
         if (typeof level === 'string')
             this.level = -1
@@ -61,6 +62,13 @@ class Level {
                 onError(e)
             })
         }
+
+        this.particleGeometry.setAttribute('position', new BufferAttribute(this.particlePositions, 3))
+        this.particle = new Points(this.particleGeometry, new PointsMaterial({
+            color: 0xfbfdc8,
+            size: 10
+        }))
+        this.particle.visible = false
     }
     check(): Vector3[] | null {
         if (this.startPos === undefined || this.destPos.length <= this.nowStage)
@@ -123,20 +131,31 @@ class Level {
         // Setup up united drag control
         this.uniteDragControl = new DragControls(dragObjs, this.camera, this.renderer.domElement)
         this.uniteDragControl.addEventListener("dragstart", (e) => {
-            const target = e.object.parent as any
+            let target = e.object as any
+            while (!target.parent.isScene)
+                target = target.parent
             if (target.onControlDragStart)
                 target.onControlDragStart(e)
         })
         this.uniteDragControl.addEventListener("drag", (e) => {
-            const target = e.object.parent as any
-            if (target.onControlDrag)
+            let target = e.object as any
+            while (!target.parent.isScene)
+                target = target.parent
+            if (!this.detachCollide(target) && target.onControlDrag)
                 target.onControlDrag(e)
+            else {
+                target.setPos(target.pos)
+            }
         })
         this.uniteDragControl.addEventListener("dragend", (e) => {
-            const target = e.object.parent as any
+            let target = e.object as any
+            while (!target.parent.isScene)
+                target = target.parent
             if (target.onControlDragEnd)
                 target.onControlDragEnd(e)
         })
+
+        this.scene.add(this.particle)
     }
     setupPonder(pos: Vector3) {
         const loader = new GLTFLoader()
@@ -188,7 +207,7 @@ class Level {
         this.walkHint = new Mesh(routeShowGeometry, routeShowMaterial)
         this.walkHint.position.set(
             pos.x * unitWidth + unitWidth / 2,
-            (pos.y + 1) * unitWidth + 6,
+            (pos.y + 1) * unitWidth,
             pos.z * unitWidth + unitWidth / 2
         )
         this.scene.add(this.walkHint)
@@ -216,37 +235,56 @@ class Level {
         )
     }
     updatePonder() {
-        if (!this.ponder || this.animateProgress <= 0)
+        if (!this.ponder || !this.walkHint || this.animateProgress <= 0)
             return
-        if (this.animateProgress < this.route.length - 1) {
-            this.animation.animations.Running.weight = 1
-            this.animation.animations.Standing.weight = 0
-            const targetPoint = this.route[this.animateProgress]
-            const direction = new Vector3().subVectors(targetPoint, this.route[this.animateProgress - 1])
-            if (direction.z > 0)
-                this.ponder.rotation.set(0, 0, 0)
-            else if (direction.z < 0)
-                this.ponder.rotation.set(0, Math.PI, 0)
-            else if (direction.x > 0)
-                this.ponder.rotation.set(0, Math.PI / 2, 0)
-            else if (direction.x < 0)
-                this.ponder.rotation.set(0, -Math.PI / 2, 0)
-            this.ponder.position.add(direction.clone().normalize().multiplyScalar(0.8))
-            const realTarget = this.fixPos(targetPoint)
-            const dist = Math.sqrt(Math.pow((this.ponder.position.x - this.ponder.position.y - realTarget.x + realTarget.y), 2) + Math.pow((this.ponder.position.z - this.ponder.position.y - realTarget.z + realTarget.y), 2))
-            if (dist < 0.8)
-                this.animateProgress++
-
-            //this.particlePositions.push(this.ponder.position.clone());
-            //if (this.particlePositions.length > 100)
-            //    this.particlePositions.shift()
-            //this.particles.geometry.setFromPoints(this.particlePositions)
-            //console.log(this.particles, this.particlePositions)
-        }
-        else {
+        if (this.animateProgress >= this.route.length + this.route.length - 1) {
             this.animateProgress = -5
             this.animation.animations.Running.weight = 0
             this.animation.animations.Standing.weight = 1
+        }
+        else {
+            if (this.animateProgress === this.route.length - 1) {
+                this.animateProgress = this.route.length + 1
+                this.walkHint.visible = false
+                this.particle.visible = false
+            }
+            const targetPoint = this.route[this.animateProgress % this.route.length]
+            const direction = new Vector3().subVectors(targetPoint, this.route[(this.animateProgress % this.route.length) - 1])
+            const objectTarget = (this.animateProgress < this.route.length) ? this.walkHint : this.ponder
+            const walkLength = (this.animateProgress < this.route.length) ? 3 : 0.8
+            if (this.animateProgress < this.route.length - 1) {
+                this.walkHint.visible = true
+                this.particle.visible = true
+                for (let i = 0; i < this.particlePositions.length; i += 3) {
+                    this.particlePositions[i] = objectTarget.position.x + Math.random() * 2 - 1
+                    this.particlePositions[i + 1] = objectTarget.position.y + Math.random() * 2 - 1
+                    this.particlePositions[i + 2] = objectTarget.position.z + Math.random() * 2 - 1
+                }
+                this.particleGeometry.attributes.position.needsUpdate = true
+            }
+            else {
+                this.animation.animations.Running.weight = 1
+                this.animation.animations.Standing.weight = 0
+                if (direction.z > 0)
+                    this.ponder.rotation.set(0, 0, 0)
+                else if (direction.z < 0)
+                    this.ponder.rotation.set(0, Math.PI, 0)
+                else if (direction.x > 0)
+                    this.ponder.rotation.set(0, Math.PI / 2, 0)
+                else if (direction.x < 0)
+                    this.ponder.rotation.set(0, -Math.PI / 2, 0)
+
+                //this.particlePositions.push(this.ponder.position.clone());
+                //if (this.particlePositions.length > 100)
+                //    this.particlePositions.shift()
+                //this.particles.geometry.setFromPoints(this.particlePositions)
+                //console.log(this.particles, this.particlePositions)
+            }
+            objectTarget.position.add(direction.clone().normalize().multiplyScalar(walkLength))
+            const realTarget = this.fixPos(targetPoint)
+            const dist = Math.sqrt(Math.pow((objectTarget.position.x - objectTarget.position.y - realTarget.x + realTarget.y), 2) + Math.pow((objectTarget.position.z - objectTarget.position.y - realTarget.z + realTarget.y), 2))
+            if (dist < walkLength * 2)
+                this.animateProgress++
         }
     }
     walkRoute(route: Vector3[]) {
@@ -282,6 +320,35 @@ class Level {
             this.destPos[this.nowStage].z * unitWidth + unitWidth / 2
         )
         return true
+    }
+    detachCollide(obj: Cube | DrawBox | Rotator) {
+        return false
+        if (obj.name === "Mirror")
+            return false
+        const tmpBoxs = obj.children.map(x => new Box3().setFromObject(x))
+        //console.log(tmpBoxs)
+        let flag = false
+        out:
+        for (const c of this.allCubes) {
+            if (c.uuid === obj.uuid)
+                continue
+            for (const p of tmpBoxs) {
+                if (c.detechCollide(p)) {
+                    flag = true
+                    //console.log(new Box3().setFromObject(c.children[0]))
+                    break out
+                }
+            }
+        }
+        //console.log(flag)
+        if (flag) {
+            if (obj.userData.originalPosition)
+                obj.position.copy(obj.userData.originalPosition)
+        }
+        else {
+            obj.userData.originalPosition = new Vector3().copy(obj.position)
+        }
+        return flag
     }
 
 }
