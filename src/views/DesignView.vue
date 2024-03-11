@@ -73,6 +73,7 @@ const camera = new OrthographicCamera(
 
 camera.position.set(200, 200, 200)
 camera.lookAt(scene.position)
+camera.zoom = 2
 
 // Setup lights
 const ambientLight = new AmbientLight(0xffffff)
@@ -146,7 +147,7 @@ const setupScene = () => {
         const p = designer.objects.indexOf(t)
         if (p === -1)
             return
-        switch (t.name) {
+        switch (t.objectType) {
             case "Cube":
                 levelInfo.value.objects[p].pos = [fixPos(t.children[0].position.x, 1), fixPos(t.children[0].position.y, 1), fixPos(t.children[0].position.z, 1)]
                 changeObj(p)
@@ -200,8 +201,8 @@ const setupScene = () => {
                     }, 300)
                 }
             }
-            if (["Cube", "Drawbox", "Rotator"].includes(p.name)) {
-                if (p.name === "Rotator")
+            if (["Cube", "Drawbox", "Rotator"].includes(p.objectType)) {
+                if (p.objectType === "Rotator")
                     tc.attach(p)
                 else
                     tc.attach(p.children[0])

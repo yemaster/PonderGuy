@@ -22,7 +22,7 @@ class Rotator extends Component {
     constructor(...args: any) {
         super(...args)
         this.movable = true
-        this.name = "Rotator"
+        this.objectType = "Rotator"
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [4, 4]
         this.angle = args?.[3] || 0
@@ -121,6 +121,7 @@ class Rotator extends Component {
         this.len = len
 
         this.setFace(this.face)
+        this.mirrorComponent?.setSize([this.len[0], this.len[1]])
     }
 
     setColor(color: string) {

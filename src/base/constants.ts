@@ -4,6 +4,7 @@ export type faceType = "+x" | "+y" | "+z" | "-x" | "-y" | "-z"
 
 export type CubeInfo = {
     type: "Cube";
+    name?: string;
     pos: [number, number, number];
     size?: never;
     angle?: never;
@@ -15,6 +16,7 @@ export type CubeInfo = {
 
 export type DrawboxInfo = {
     type: "Drawbox";
+    name?: string;
     pos: [number, number, number];
     size: [number, number, number];
     angle?: never;
@@ -26,6 +28,7 @@ export type DrawboxInfo = {
 
 export type RotatorInfo = {
     type: "Rotator";
+    name?: string;
     pos: [number, number, number];
     size: [number, number];
     angle: number;
@@ -37,6 +40,7 @@ export type RotatorInfo = {
 
 export type PlaneInfo = {
     type: "Plane";
+    name?: string;
     pos: [number, number, number];
     size?: never;
     angle?: never;
@@ -60,4 +64,5 @@ export type levelData = {
     dests: [number, number, number][];
     objects: objectInfo[];
     mirror?: MirrorInfo;
+    appendActions?: any;
 }

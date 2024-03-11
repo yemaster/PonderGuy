@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // Vue core modules
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 
 // Three.js core modules
-import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2, Clock, AxesHelper } from 'three'
+import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2, Clock } from 'three'
 import { WebGLRenderer } from 'three'
 import Picker from '@/base/picker'
 
@@ -30,6 +30,30 @@ document.title = `关卡#${levelId.value} | Ponder Guy`
 const fog = ref()
 const levelShow = ref()
 
+// Prepare APIs for custom level
+const levelClickEvent = () => {
+    nowLevel.handleEvent("click")
+}
+
+const hint = ref("")
+const hintVisible = ref(false)
+
+function showHint(val: string) {
+    let delayTime = 0
+    if (hintVisible.value) {
+        hintVisible.value = false
+        delayTime = 300
+    }
+    setTimeout(() => {
+        hintVisible.value = true
+        hint.value = val
+    }, delayTime)
+}
+
+function hideHint() {
+    hintVisible.value = false
+}
+
 // Setup Three.js Scene
 // Get window sizes
 const sizes = {
@@ -45,8 +69,8 @@ const camera = new OrthographicCamera(
     sizes.width / 16,
     sizes.height / 16,
     sizes.height / -16,
-    -200,
-    500
+    -500,
+    2000
 )
 let renderer!: WebGLRenderer
 camera.position.set(250, 250, 250)
@@ -147,6 +171,38 @@ const canvasResizeHandler = () => {
 
 // Setup Scene
 const clock = new Clock()
+
+// Mouse Event
+const handleMouseDown = (e: MouseEvent) => {
+    isObjectChosen = !(picker.pickedObject === undefined)
+    isPress = true
+    originPosition.x = e.clientX
+    originPosition.y = e.clientY
+
+    if (picker.pickedObject && nowLevel.animateProgress === -1) {
+        const p = picker.pickedObject.parent
+        if (p && p.type === 'Group' && p.movable) {
+            if (p.objectType === "Rotator") {
+                nowLevel.handleEvent("rotate")
+                nowLevel.rotateEventTime++
+            }
+            chosenObject = p
+            if (p.onDragStart)
+                p.onDragStart(picker.raycaster, picker.pickedObjectPoint)
+        }
+    }
+}
+const handleMouseUp = () => {
+    isPress = false
+    if (chosenObject && nowLevel.animateProgress === -1) {
+        if (chosenObject.onDragEnd) {
+            chosenObject.onDragEnd(picker.raycaster, picker.pickedObjectPoint)
+            const route = nowLevel.check()
+            if (route !== null)
+                nowLevel.walkRoute(route)
+        }
+    }
+}
 const setupScene = () => {
     canvas = document.getElementById("pg-canvas") as HTMLCanvasElement
     renderer = new WebGLRenderer({
@@ -156,42 +212,23 @@ const setupScene = () => {
     })
     renderer.localClippingEnabled = true
 
-    nowLevel = new Level(isCustom.value ? localStorage.levelData : levelId.value, scene, camera, renderer, (e: any) => { alert(e); router.push("/game/list") })
+    nowLevel = new Level(isCustom.value ? localStorage.levelData : levelId.value, scene, camera, renderer, (e: any) => { alert(e); router.push("/game/list") }, {
+        showHint, hideHint
+    })
+    //window.level = nowLevel
     picker.updateObjs(scene.children)
 
     const oc = new OrbitControls(camera, renderer.domElement)
     oc.enableRotate = false
     oc.zoomToCursor = true
 
-    canvas.addEventListener("mousedown", (e: MouseEvent) => {
-        isObjectChosen = !(picker.pickedObject === undefined)
-        isPress = true
-        originPosition.x = e.clientX
-        originPosition.y = e.clientY
-
-        if (picker.pickedObject && nowLevel.animateProgress === -1) {
-            const p = picker.pickedObject.parent
-            if (p && p.type === 'Group' && p.movable) {
-                chosenObject = p
-                if (p.onDragStart)
-                    p.onDragStart(picker.raycaster, picker.pickedObjectPoint)
-            }
-        }
-    })
-
-    canvas.addEventListener("mouseup", () => {
-        isPress = false
-        if (chosenObject && nowLevel.animateProgress === -1) {
-            if (chosenObject.onDragEnd) {
-                chosenObject.onDragEnd(picker.raycaster, picker.pickedObjectPoint)
-                const route = nowLevel.check()
-                if (route !== null)
-                    nowLevel.walkRoute(route)
-            }
-        }
-    })
+    canvas.addEventListener("mousedown", handleMouseDown)
+    canvas.addEventListener("mouseup", handleMouseUp)
 
     canvasResizeHandler()
+
+    // Prepare Events for Level Designer
+    window.addEventListener("click", levelClickEvent)
 
     const showNextLevel = () => {
         setTimeout(() => {
@@ -250,6 +287,7 @@ const setupScene = () => {
         fog.value.style.opacity = "0"
         levelShow.value.style.opacity = "0"
         fog.value.style.visibility = "hidden"
+        nowLevel.handleEvent("init")
     }, 2200)
 }
 //const axesHelper = new AxesHelper(100)
@@ -265,6 +303,37 @@ function backLevel() {
         router.replace(`/game/list`)
     }, 1000)
 }
+
+onBeforeUnmount(() => {
+    // Destroy scene
+    window.removeEventListener('mousemove', setPickPosition)
+    window.removeEventListener('mouseout', clearPickPosition)
+    window.removeEventListener('mouseleave', clearPickPosition)
+    window.removeEventListener("resize", debounce(canvasResizeHandler, 100))
+    window.removeEventListener("click", levelClickEvent)
+    canvas.removeEventListener("mousedown", handleMouseDown)
+    canvas.removeEventListener("mouseup", handleMouseUp)
+
+    try {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        let gl = renderer.domElement.getContext("webgl");
+        if (gl && gl.getExtension("WEBGL_lose_context")) {
+            gl.getExtension("WEBGL_lose_context")?.loseContext();
+        }
+        scene.traverse((child: any) => {
+            if (child.material) {
+                child.material.dispose()
+            }
+            if (child.geometry) {
+                child.geometry.dispose()
+            }
+            child = null
+        })
+    } catch (e) {
+        console.error("Failed to destroy threejs", e);
+    }
+})
 </script>
 
 <template>
@@ -281,6 +350,7 @@ function backLevel() {
     <div class="pg-back-button" @click="backLevel()">
         <icon-menu></icon-menu>
     </div>
+    <div class="pg-hint" :class="{ show: hintVisible }">{{ hint }}</div>
 </template>
 
 <style scoped>
@@ -329,5 +399,30 @@ function backLevel() {
     left: 20px;
 
     cursor: pointer;
+}
+
+.pg-hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, .4);
+    backdrop-filter: blur(10px);
+
+    padding: 50px 10%;
+    text-align: center;
+    box-sizing: border-box;
+
+    color: #fff;
+    font-family: "genshin";
+    font-size: 20px;
+
+    opacity: 0;
+
+    transition: opacity .1s;
+}
+
+.pg-hint.show {
+    opacity: 1;
 }
 </style>

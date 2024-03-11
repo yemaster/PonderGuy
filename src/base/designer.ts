@@ -163,7 +163,7 @@ export default class Designer {
         if (this.objects[p] === undefined)
             return
         const d = this.objects[p]
-        if (d.name !== info.type) {
+        if (d.objectType !== info.type) {
             this.drawObjs.splice(this.drawObjs.indexOf(d), 1)
             d.children.forEach((v: any) => {
                 v.geometry?.dispose()
@@ -185,7 +185,7 @@ export default class Designer {
                 d.setDirection(info.direction)
             if ((info.face || info.face === 0) && d.setFace)
                 d.setFace(info.face)
-            //console.log(d.name, info.pos)
+            //console.log(d.objectType, info.pos)
         }
         if (this.mirror)
             this.mirror.updateMirrorCubePos()

@@ -2,7 +2,7 @@ import { unitWidth } from "@/base/constants"
 import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
-import { PlaneGeometry, MeshBasicMaterial, Mesh, Scene, Vector3, Plane } from "three"
+import { PlaneGeometry, MeshBasicMaterial, Mesh, Scene, Vector3, Plane, Box3 } from "three"
 import Component from "@/base/component"
 import { calcPos, fixPos, calcMirrorPos, calcMirrorAngle } from "@/base/methods"
 
@@ -17,7 +17,7 @@ export default class Mirror extends Component {
     constructor(...args: any) {
         super(...args)
         this.movable = true
-        this.name = "Mirror"
+        this.objectType = "Mirror"
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 0]
         this.range = args?.[2] || [[1], [1], [1]]
@@ -60,7 +60,7 @@ export default class Mirror extends Component {
             let tmpObj: any
             let tmpPos: [number, number, number]
             if (v.mirrorComponent) {
-                switch (v.name) {
+                switch (v.objectType) {
                     case "Cube":
                         v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
                         break
@@ -88,7 +88,7 @@ export default class Mirror extends Component {
                 }
             }
             else {
-                switch (v.name) {
+                switch (v.objectType) {
                     case "Cube":
                         tmpObj = new Cube(calcMirrorPos(v.pos, this.pos, face), v.color)
                         v.mirrorComponent = tmpObj
@@ -96,7 +96,7 @@ export default class Mirror extends Component {
                         scene.add(tmpObj)
                         break
                     case "Rotator":
-                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), [v.len[1], v.len[0]], v.color, v.angle * ((v.direction === face) ? 1 : -1), v.direction,
+                        tmpObj = new Rotator(calcMirrorPos(v.pos, this.pos, face), [v.len[0], v.len[1]], v.color, v.angle * ((v.direction === face) ? 1 : -1), v.direction,
                             [
                                 (v.face[0][1] !== mirrorAxis ? v.face[0][0] : reverseFace(v.face[0][0] as ("+" | "-"))) + v.face[0][1],
                                 (v.face[1][1] !== mirrorAxis ? v.face[1][0] : reverseFace(v.face[1][0] as ("+" | "-"))) + v.face[1][1],
@@ -146,6 +146,10 @@ export default class Mirror extends Component {
                 t.geometry.dispose()
                 t.geometry = new PlaneGeometry(unitWidth * (size[0] + size[2]), unitWidth * (size[1] || 1))
             }
+
+            if (size[0] === 0)
+                t.rotation.y = Math.PI / 2
+
             t.position.x = calcPos(this.pos[0], size[0], size[0] === 0)
             t.position.y = calcPos(this.pos[1], size[1])
             t.position.z = calcPos(this.pos[2], size[2], size[2] === 0)
@@ -277,5 +281,9 @@ export default class Mirror extends Component {
                 v.geometry.dispose()
             }
         })
+    }
+
+    detechCollide(box: Box3): boolean {
+        return false
     }
 }

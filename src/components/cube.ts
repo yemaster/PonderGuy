@@ -7,7 +7,7 @@ class Cube extends Component {
     pos: [number, number, number];
     constructor(...args: any) {
         super(...args)
-        this.name = "Cube"
+        this.objectType = "Cube"
         this.pos = args[0]
         this.color = args?.[1] || "#54c8ff"
     }

@@ -8,6 +8,7 @@ import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import Mirror from "@/components/mirror"
 import { DragControls, GLTFLoader } from "three/examples/jsm/Addons.js"
+import { animate } from "popmotion"
 import { useStore } from "@/store";
 
 // Axios
@@ -37,7 +38,14 @@ class Level {
     particleGeometry: BufferGeometry = new BufferGeometry();
     particlePositions: Float32Array = new Float32Array(20 * 3);
     particle: Points;
-    constructor(level: number | string, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer, onError: Function = (e: any) => { console.log(e) }) {
+    injectMethods: any;
+    appendActions: any = {};
+
+    // Event Times
+    dragEventTime: number = 0;
+    mirrorEventTime: number = 0;
+    rotateEventTime: number = 0;
+    constructor(level: number | string, scene: Scene, camera: OrthographicCamera | PerspectiveCamera, renderer: WebGLRenderer, onError: Function = (e: any) => { console.log(e) }, met: any) {
         if (typeof level === 'string')
             this.level = -1
         else
@@ -69,6 +77,8 @@ class Level {
             size: 10
         }))
         this.particle.visible = false
+
+        this.injectMethods = met
     }
     check(): Vector3[] | null {
         if (this.startPos === undefined || this.destPos.length <= this.nowStage)
@@ -84,7 +94,83 @@ class Level {
             } : undefined
         }, pos1, pos2)
     }
+    parseCode(p: string) {
+        const paras = p.split(/\s+/)
+        const variables = {
+            "dragTimes": this.dragEventTime,
+            "mirrorTimes": this.mirrorEventTime,
+            "rotateTimes": this.rotateEventTime
+        }
+        let match: RegExpMatchArray | null
+        if (paras.length <= 0)
+            return
+        switch (paras[0]) {
+            case "hideHint":
+                this.injectMethods.hideHint()
+                break
+            case "showHint":
+                this.injectMethods.showHint(paras.slice(1).join(" "))
+                break
+            case "delay":
+                setTimeout(() => {
+                    this.parseCode(paras.slice(2).join(" "))
+                }, Number(paras?.[1] || 0) || 0)
+                break
+            case "if":
+                match = (paras?.[1] || "").match(/([a-zA-Z]+)([<>]=?|=)(\d+)/)
+                if (match && match.length === 4) {
+                    const variableName = match[1]
+                    const operator = match[2]
+                    const value = Number(match[3])
+                    if (variableName in variables) {
+                        const variableValue = variables[variableName as "dragTimes" | "mirrorTimes" | "rotateTimes"]
+                        let res = false
+                        switch (operator) {
+                            case "<":
+                                res = variableValue < value
+                                break
+                            case "<=":
+                                res = variableValue <= value
+                                break
+                            case '>':
+                                res = variableValue > value
+                                break
+                            case '>=':
+                                res = variableValue >= value
+                                break
+                            case '=':
+                                res = variableValue === value
+                                break
+                        }
+                        if (res) {
+                            this.parseCode(paras.slice(2).join(" "))
+                        }
+                    }
+                }
+                break
+            case "log":
+                console.log(paras)
+                break
+        }
+    }
+    // Append Codes
+    parseAction(p: string) {
+        const codeLines = p.split(/\n+/)
+        for (const line of codeLines) {
+            this.parseCode(line)
+        }
+    }
+    handleEvent(e: string) {
+        if (e in this.appendActions) {
+            this.parseAction(this.appendActions[e])
+        }
+    }
+    // Setup Scene
     setupScene(levelInfo: levelData): void {
+        if (levelInfo.appendActions) {
+            this.appendActions = levelInfo.appendActions
+        }
+
         this.scene.background = new Color(levelInfo.background || "#feffbd")
 
         this.startPos = new Vector3().fromArray(levelInfo.start)
@@ -102,6 +188,8 @@ class Level {
             switch (v.type) {
                 case "Cube":
                     obj = new Cube(v.pos, v.color)
+                    if (v.name)
+                        obj.name = v.name
                     this.scene.add(obj)
                     this.allCubes.push(obj)
                     break
@@ -110,12 +198,16 @@ class Level {
                     break
                 case "Drawbox":
                     tmpDrawbox = new DrawBox(v.pos, v.size, v.range, v.color)
+                    if (v.name)
+                        tmpDrawbox.name = v.name
                     this.scene.add(tmpDrawbox)
                     this.allCubes.push(tmpDrawbox)
                     dragObjs.push(tmpDrawbox)
                     break
                 case "Rotator":
                     obj = new Rotator(v.pos, v.size, v.color, v.angle, v.direction, v.face)
+                    if (v.name)
+                        obj.name = v.name
                     this.scene.add(obj)
                     this.allCubes.push(obj)
                     break
@@ -136,6 +228,14 @@ class Level {
                 target = target.parent
             if (target.onControlDragStart)
                 target.onControlDragStart(e)
+            if (target.objectType === "Mirror") {
+                this.handleEvent("mirror")
+                this.mirrorEventTime++
+            }
+            else {
+                this.handleEvent("drag")
+                this.dragEventTime++
+            }
         })
         this.uniteDragControl.addEventListener("drag", (e) => {
             let target = e.object as any
@@ -223,6 +323,7 @@ class Level {
         //this.particles = new Points(particleGeometry, particleMaterial);
         //this.scene.add(this.particles);
     }
+    // Animations
     updateAnimation(t: number) {
         if (this.animation)
             this.animation.mixer.update(t)
@@ -298,7 +399,9 @@ class Level {
         this.walkStage += 1
         this.animateProgress = 1
         this.disableControls()
+        this.handleEvent(`finish_${this.nowStage}`)
     }
+    // Control control
     enableControls() {
         if (this.uniteDragControl)
             this.uniteDragControl.enabled = true
@@ -321,9 +424,48 @@ class Level {
         )
         return true
     }
+    changeCameraAngle(angle: 0 | 1 | 2 | 3) {
+        const targetPosition = new Vector3()
+        switch (angle) {
+            case 0:
+                targetPosition.set(250, 250, 250)
+                break
+            case 1:
+                targetPosition.set(-250, 250, 250)
+                break
+            case 2:
+                targetPosition.set(250, 250, -250)
+                break
+            case 3:
+                targetPosition.set(-250, 250, -250)
+                break
+        }
+        /*if ((targetPosition.x !== Math.round(this.camera.position.x)) && (targetPosition.z !== Math.round(this.camera.position.z))) {
+            const tmpPosition = new Vector3().copy(targetPosition)
+            tmpPosition.x = -tmpPosition.x
+            animate({
+                to: [this.camera.position, tmpPosition, targetPosition],
+                onUpdate: v => {
+                    this.camera.position.copy(v)
+                    this.camera.lookAt(this.scene.position)
+                },
+                duration: 1000
+            })
+        }
+        else */
+        animate({
+            from: this.camera.position,
+            to: targetPosition,
+            onUpdate: v => {
+                this.camera.position.copy(v)
+                this.camera.lookAt(this.scene.position)
+            },
+            duration: 1000
+        })
+    }
     detachCollide(obj: Cube | DrawBox | Rotator) {
         return false
-        if (obj.name === "Mirror")
+        if (obj.objectType === "Mirror")
             return false
         const tmpBoxs = obj.children.map(x => new Box3().setFromObject(x))
         //console.log(tmpBoxs)

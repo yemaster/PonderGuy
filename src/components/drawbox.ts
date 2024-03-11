@@ -20,7 +20,7 @@ class DrawBox extends Component {
     constructor(...args: any) {
         super(...args)
         this.movable = true
-        this.name = "Drawbox"
+        this.objectType = "Drawbox"
         this.pos = args?.[0] || [0, 0, 0]
         this.len = args?.[1] || [1, 1, 1]
         this.range = args?.[2] || [[1], [1], [1]]

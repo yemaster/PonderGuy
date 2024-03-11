@@ -46,7 +46,7 @@ function getVirtualPos(arr: any[]) {
                 new Vector3(0, 0, 1)
             ];
             //console.log(v)
-            switch (v.name) {
+            switch (v.objectType) {
                 case "Cube":
                     res.push([
                         v.pos[0],
