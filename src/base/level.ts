@@ -12,7 +12,7 @@ import { animate } from "popmotion"
 import { useStore } from "@/store";
 
 // Axios
-import axios from 'axios'
+import axios from '@/base/axios'
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 class Level {

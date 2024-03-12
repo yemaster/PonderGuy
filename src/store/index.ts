@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import PonderGuyDB from "@/base/db"
-import axios from "axios"
+import axios from '@/base/axios'
 
 export const useStore = defineStore('ponderGuy', {
     state: () => {

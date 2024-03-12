@@ -27,7 +27,7 @@
     "appendActions": {
         "init": "showHint 我是Ponder小子,我的红色方块丢失了,请你帮助我找到它们吧\ndelay 1000 showHint 拖动黄色的移动条,使得路径联通,我会自动跑过去",
         "finish_0": "showHint 干的很棒！接下来，现在拖动这个镜子，尝试让Ponder小子与第二个红色方块联通，镜子中被反射的物体也能组成路径",
-        "finish_1": "showHint 到最后一步了，现在，旋转这个红色块，使得Ponder小子与第三个红色方块联通。"
+        "finish_1": "showHint 到最后一步了，现在，旋转这个红色块，使得Ponder小子与第三个红色方块联通。\ndelay 2000 hideHint"
     },
     "appendObjects": {
         "finish_0": [{

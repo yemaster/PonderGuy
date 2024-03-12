@@ -7,8 +7,10 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap/dist/js/bootstrap.min.js"
 
 // Axios
-import axios from 'axios'
+import axios from '@/base/axios'
 document.title = `关卡选择 | Ponder Guy`
+
+const baseURL = import.meta.env.BASE_URL
 
 
 const fog = ref()
@@ -74,7 +76,7 @@ function importLevel() {
             <div class="pg-divider"></div>
             <div class="pg-level-list">
                 <div class="pg-level-box" v-for="(l, i) in level_list" v-bind:key="i"
-                    :style="`background-image: url(${l.img});`" @click="gotoGame(i)">
+                    :style="`background-image: url(${baseURL}${l.img});`" @click="gotoGame(i)">
                     <div class="pg-level-text">
                         <div class="pg-level-text-content">
                             Level {{ i }}
@@ -82,7 +84,7 @@ function importLevel() {
                         </div>
                     </div>
                 </div>
-                <div class="pg-level-box" style="background-image: url(/imgs/designer.jpg);" data-bs-toggle="modal"
+                <div class="pg-level-box" :style="`background-image: url(${baseURL}/imgs/designer.jpg);`" data-bs-toggle="modal"
                     data-bs-target="#importModal">
                     <div class="pg-level-text">
                         <div class="pg-level-text-content">
