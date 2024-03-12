@@ -30,6 +30,7 @@ jobs:
         cache: 'npm'
     - run: npm i
     - run: npm run build-github
+    - run: touch dist/.nojekyll
 
     - name: deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
