@@ -10,7 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: windows-latest
 
     strategy:
@@ -27,22 +27,11 @@ jobs:
         cache: 'npm'
     - run: npm i
     - run: npm run build
-    
-  deploy:
-    needs: build
-    
-    permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
 
-    # Deploy to the github-pages environment
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    # Specify runner + deployment step
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: deploy
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        REPOSITORY_NAME: somenzz/somenzz.github.io
+        BRANCH: master
+        FOLDER: public
