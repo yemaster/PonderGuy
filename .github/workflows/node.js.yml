@@ -31,7 +31,4 @@ jobs:
     - name: deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        REPOSITORY_NAME: yemaster/PonderGuy
-        BRANCH: demo
-        FOLDER: dist
+        folder: dist
