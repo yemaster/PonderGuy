@@ -203,6 +203,9 @@ const handleMouseUp = () => {
         }
     }
 }
+
+let oc: OrbitControls
+
 const setupScene = () => {
     canvas = document.getElementById("pg-canvas") as HTMLCanvasElement
     renderer = new WebGLRenderer({
@@ -218,7 +221,7 @@ const setupScene = () => {
     //window.level = nowLevel
     picker.updateObjs(scene.children)
 
-    const oc = new OrbitControls(camera, renderer.domElement)
+    oc = new OrbitControls(camera, renderer.domElement)
     oc.enableRotate = false
     oc.zoomToCursor = true
 
@@ -330,6 +333,7 @@ onBeforeUnmount(() => {
             }
             child = null
         })
+        oc.dispose()
     } catch (e) {
         console.error("Failed to destroy threejs", e);
     }

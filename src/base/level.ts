@@ -1,7 +1,7 @@
 // Three.js & Core components
 import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Points, BufferGeometry, PointsMaterial, BufferAttribute, Box3 } from "three"
 import calcRoute from "@/base/calcRoute"
-import { unitWidth, type objectInfo, type levelData } from "./constants";
+import { unitWidth, type objectInfo, type levelData, type appendObjectsMethod } from "./constants";
 import Plane from "@/components/plane"
 import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
@@ -19,27 +19,34 @@ class Level {
     scene: Scene;
     camera: OrthographicCamera | PerspectiveCamera;
     renderer: WebGLRenderer;
-    movableObjects: Group[];
-    startPos: Vector3 | undefined = undefined;
-    destPos: Vector3[] = [];
-    nowStage: number = 0;
+
+    allCubes: any[] = [];
+    draggableObjects: any[] = [];
+    uniteDragControl: DragControls | undefined;
+    mirror: Mirror | undefined;
+
     ponder: Group | null = null;
     tingyun: Mesh | null = null;
-    animateProgress: number = -1;
+
+    startPos: Vector3 | undefined = undefined;
+    destPos: Vector3[] = [];
     walkHint: Mesh | null = null;
+    nowStage: number = 0;
+    animateProgress: number = -1;
     walkStage: number = -1;
     route: Vector3[] = [];
-    uniteDragControl: DragControls | undefined;
-    allCubes: any[] = [];
-    mirror: Mirror | undefined;
+
     level: number;
     levelData: string = "";
+
     animation!: { mixer: AnimationMixer, animations: { "Running": AnimationAction, "Standing": AnimationAction } };
     particleGeometry: BufferGeometry = new BufferGeometry();
     particlePositions: Float32Array = new Float32Array(20 * 3);
     particle: Points;
+
     injectMethods: any;
     appendActions: any = {};
+    appendObjects: any = {};
 
     // Event Times
     dragEventTime: number = 0;
@@ -53,7 +60,6 @@ class Level {
         this.scene = scene
         this.camera = camera
         this.renderer = renderer
-        this.movableObjects = []
 
         if (typeof level === "string") {
             try {
@@ -94,6 +100,8 @@ class Level {
             } : undefined
         }, pos1, pos2)
     }
+
+    // Append Codes
     parseCode(p: string) {
         const paras = p.split(/\s+/)
         const variables = {
@@ -153,6 +161,38 @@ class Level {
                 break
         }
     }
+    // Add Object
+    addObject(v: objectInfo) {
+        let tmpDrawbox: DrawBox
+        let obj: any
+        switch (v.type) {
+            case "Cube":
+                obj = new Cube(v.pos, v.color)
+                if (v.name)
+                    obj.name = v.name
+                this.scene.add(obj)
+                this.allCubes.push(obj)
+                break
+            case "Plane":
+                this.scene.add(new Plane(v.pos, v.color).obj)
+                break
+            case "Drawbox":
+                tmpDrawbox = new DrawBox(v.pos, v.size, v.range, v.color)
+                if (v.name)
+                    tmpDrawbox.name = v.name
+                this.scene.add(tmpDrawbox)
+                this.allCubes.push(tmpDrawbox)
+                this.draggableObjects.push(tmpDrawbox)
+                break
+            case "Rotator":
+                obj = new Rotator(v.pos, v.size, v.color, v.angle, v.direction, v.face)
+                if (v.name)
+                    obj.name = v.name
+                this.scene.add(obj)
+                this.allCubes.push(obj)
+                break
+        }
+    }
     // Append Codes
     parseAction(p: string) {
         const codeLines = p.split(/\n+/)
@@ -160,15 +200,71 @@ class Level {
             this.parseCode(line)
         }
     }
+    parseObjectAction(p: appendObjectsMethod[]) {
+        p.forEach(v => {
+            switch (v.type) {
+                case "add":
+                    this.addObject(v.obj)
+                    break
+                case "change":
+                    if (v.obj.name) {
+                        const obj = this.scene.getObjectByName(v.obj.name) as Cube | DrawBox | Rotator | undefined
+                        if (obj) {
+                            if (v.obj.pos)
+                                obj?.setPos(v.obj.pos)
+                            if (v.obj.size && typeof (obj as any).setSize === 'function')
+                                (obj as any).setSize(v.obj.pos)
+                            if (v.obj.face && typeof (obj as any).setFace === 'function')
+                                (obj as any).setFace(v.obj.face)
+                            if (v.obj.range && typeof (obj as any).setRange === 'function')
+                                (obj as any).setRange(v.obj.range)
+                            if (v.obj.angle && typeof (obj as any).setAngle === 'function')
+                                (obj as any).setAngle(v.obj.angle)
+                            if (v.obj.direction && typeof (obj as any).setDirection === 'function')
+                                (obj as any).setDirection(v.obj.direction)
+                            if (v.obj.color && typeof (obj as any).setColor === 'function')
+                                (obj as any).setColor(v.obj.color)
+                        }
+                    }
+                    break
+                case "remove":
+                    if (v.obj.name) {
+                        const obj = this.scene.getObjectByName(v.obj.name)
+                        if (obj) {
+                            let pos: number
+                            pos = this.allCubes.findIndex(q => q.name === v.obj.name)
+                            if (pos !== -1)
+                                this.allCubes.splice(pos, 1)
+                            pos = this.draggableObjects.findIndex(q => q.name === v.obj.name)
+                            if (pos !== -1)
+                                this.draggableObjects.splice(pos, 1)
+                            this.scene.remove(obj)
+                        }
+                    }
+                    break
+            }
+        })
+        //this.setupDragControls()
+    }
+    // Activated when a event is happened
     handleEvent(e: string) {
         if (e in this.appendActions) {
             this.parseAction(this.appendActions[e])
+        }
+    }
+    // Activated when a part is finished
+    handleChangeObjectEvent(e: string) {
+        if (e in this.appendObjects) {
+            this.parseObjectAction(this.appendObjects[e])
         }
     }
     // Setup Scene
     setupScene(levelInfo: levelData): void {
         if (levelInfo.appendActions) {
             this.appendActions = levelInfo.appendActions
+        }
+        if (levelInfo.appendObjects) {
+            this.appendObjects = levelInfo.appendObjects
         }
 
         this.scene.background = new Color(levelInfo.background || "#feffbd")
@@ -180,48 +276,31 @@ class Level {
         })
         this.setupPonder(this.startPos)
 
-        const dragObjs: any[] = []
-
         levelInfo.objects.forEach((v: objectInfo) => {
-            let tmpDrawbox: DrawBox
-            let obj: any
-            switch (v.type) {
-                case "Cube":
-                    obj = new Cube(v.pos, v.color)
-                    if (v.name)
-                        obj.name = v.name
-                    this.scene.add(obj)
-                    this.allCubes.push(obj)
-                    break
-                case "Plane":
-                    this.scene.add(new Plane(v.pos, v.color).obj)
-                    break
-                case "Drawbox":
-                    tmpDrawbox = new DrawBox(v.pos, v.size, v.range, v.color)
-                    if (v.name)
-                        tmpDrawbox.name = v.name
-                    this.scene.add(tmpDrawbox)
-                    this.allCubes.push(tmpDrawbox)
-                    dragObjs.push(tmpDrawbox)
-                    break
-                case "Rotator":
-                    obj = new Rotator(v.pos, v.size, v.color, v.angle, v.direction, v.face)
-                    if (v.name)
-                        obj.name = v.name
-                    this.scene.add(obj)
-                    this.allCubes.push(obj)
-                    break
-            }
+            this.addObject(v)
         })
         if (levelInfo.mirror) {
             this.mirror = new Mirror(levelInfo.mirror.pos, levelInfo.mirror.size, levelInfo.mirror.range)
             this.mirror.setupMirrorCubes(this.allCubes, this.scene)
             this.scene.add(this.mirror)
-            dragObjs.push(...this.mirror.children)
+            this.draggableObjects.push(this.mirror)
         }
 
+        this.setupDragControls()
+
+        this.scene.add(this.particle)
+    }
+    disposeDragControls() {
+        if (this.uniteDragControl) {
+            this.uniteDragControl.dispose()
+        }
+        this.uniteDragControl = undefined
+    }
+    setupDragControls() {
+        // First Dispose controls
+        this.disableControls()
         // Setup up united drag control
-        this.uniteDragControl = new DragControls(dragObjs, this.camera, this.renderer.domElement)
+        this.uniteDragControl = new DragControls(this.draggableObjects, this.camera, this.renderer.domElement)
         this.uniteDragControl.addEventListener("dragstart", (e) => {
             let target = e.object as any
             while (!target.parent.isScene)
@@ -254,8 +333,6 @@ class Level {
             if (target.onControlDragEnd)
                 target.onControlDragEnd(e)
         })
-
-        this.scene.add(this.particle)
     }
     setupPonder(pos: Vector3) {
         const loader = new GLTFLoader()
@@ -413,6 +490,7 @@ class Level {
     nextStage(): Boolean {
         if (this.tingyun === null)
             return true
+        this.handleChangeObjectEvent(`finish_${this.nowStage}`)
         if (this.nowStage + 1 < this.destPos.length)
             this.nowStage += 1
         else

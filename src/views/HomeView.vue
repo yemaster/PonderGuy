@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { AmbientLight, AnimationClip, AnimationMixer, Clock, Color, DirectionalLight, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene, Vector3, WebGLRenderer } from 'three'
@@ -135,6 +135,29 @@ function gotoHelp() {
     }, 500)
 }
 
+onBeforeUnmount(() => {
+    window.removeEventListener("resize", debounce(canvasResizeHandler, 100))
+
+    try {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        let gl = renderer.domElement.getContext("webgl");
+        if (gl && gl.getExtension("WEBGL_lose_context")) {
+            gl.getExtension("WEBGL_lose_context")?.loseContext();
+        }
+        scene.traverse((child: any) => {
+            if (child.material) {
+                child.material.dispose()
+            }
+            if (child.geometry) {
+                child.geometry.dispose()
+            }
+            child = null
+        })
+    } catch (e) {
+        console.error("Failed to destroy threejs", e);
+    }
+})
 </script>
 
 <template>

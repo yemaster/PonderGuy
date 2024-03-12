@@ -58,6 +58,11 @@ export type MirrorInfo = {
     range: [number[], number[], number[]]
 }
 
+export type appendObjectsMethod = {
+    type: "add" | "remove" | "change";
+    obj: objectInfo;
+}
+
 export type levelData = {
     background: string,
     start: [number, number, number];
@@ -65,4 +70,7 @@ export type levelData = {
     objects: objectInfo[];
     mirror?: MirrorInfo;
     appendActions?: any;
+    appendObjects?: {
+        [key: string]: appendObjectsMethod[];
+    }
 }

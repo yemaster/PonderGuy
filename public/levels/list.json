@@ -2,7 +2,7 @@
     "levels": [
         {
             "name": "启程",
-            "img": "/imgs/level.png"
+            "img": "/imgs/level0.png"
         },
         {
             "name": "什么鬼",
@@ -10,6 +10,10 @@
         },
         {
             "name": "搞什么",
+            "img": "/imgs/level.png"
+        },
+        {
+            "name": "弄不懂",
             "img": "/imgs/level.png"
         }
     ]

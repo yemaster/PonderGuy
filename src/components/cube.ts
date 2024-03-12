@@ -1,7 +1,8 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
 import { calcPos, isCollide } from "@/base/methods";
-import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4, Box3 } from "three"
+import { BoxGeometry, Mesh, MeshLambertMaterial, type ColorRepresentation, Matrix4, Box3, Vector3 } from "three"
+import { animate } from "popmotion"
 
 class Cube extends Component {
     pos: [number, number, number];
@@ -36,16 +37,31 @@ class Cube extends Component {
             e.position.z = calcPos(pos[2], 1)
         })
     }
+    setPosAnimate(pos: [number, number, number]) {
+        this.pos = pos
+        const target = new Vector3(calcPos(pos[0], 1), calcPos(pos[1], 1), calcPos(pos[2], 1))
+        animate({
+            from: this.children[0].position,
+            to: target,
+            onUpdate: (l) => {
+                this.children[0].position.copy(l)
+            },
+            duration: 100
+        })
+    }
 
     setColor(color: string) {
         this.color = color
-        this.children.forEach(v => {
-            (v as any)?.material?.color.setStyle(color)
+        const frcolor = "#" + ((this.children[0] as Mesh).material as MeshLambertMaterial).color.getHexString()
+        animate({
+            from: frcolor,
+            to: color,
+            onUpdate: (l) => {
+                ((this.children[0] as Mesh).material as MeshLambertMaterial).color.setStyle(l)
+                if (this.mirrorComponent)
+                    ((this.mirrorComponent.children[0] as Mesh).material as MeshLambertMaterial).color.setStyle(l)
+            }
         })
-        if (this.mirrorComponent)
-            this.mirrorComponent.children.forEach((v: any) => {
-                v?.material?.color.setStyle(color)
-            })
     }
 
     detechCollide(box: Box3): boolean {
