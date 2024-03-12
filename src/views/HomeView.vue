@@ -127,14 +127,6 @@ function gotoList() {
     }, 500)
 }
 
-function gotoHelp() {
-    cover.value.style.visibility = "visible"
-    cover.value.style.opacity = "1"
-    setTimeout(() => {
-        router.push("/help")
-    }, 500)
-}
-
 onBeforeUnmount(() => {
     window.removeEventListener("resize", debounce(canvasResizeHandler, 100))
 

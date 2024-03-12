@@ -17,7 +17,7 @@
         { "type": "Cube", "pos": [3, 1, -5] },
         { "type": "Cube", "pos": [3, 1, 4] },
         { "type": "Drawbox", "pos": [0, 1, 1], "size": [1, 1, 4], "range": [[1], [1], [1, 4]] },
-        { "type": "Rotator", "pos": [2, -2, 4], "size": [4, 4], "face": ["+x", "+z"], "direction": 0 }
+        { "name": "rotator1", "type": "Rotator", "pos": [2, -4, 4], "size": [4, 4], "face": ["+x", "+z"], "direction": 0 }
     ],
     "mirror": {
         "pos": [-2, -3, 1],
@@ -40,6 +40,13 @@
             "obj": {
                 "name": "cube2",
                 "color": "#db2828"
+            }
+        }],
+        "finish_1": [{
+            "type": "change",
+            "obj": {
+                "name": "rotator1",
+                "pos": [2, -2, 4]
             }
         }]
     }

@@ -1,7 +1,8 @@
 import Component from "@/base/component"
 import { unitWidth } from "@/base/constants"
-import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry, Box3 } from "three"
+import { Mesh, type ColorRepresentation, MeshLambertMaterial, BoxGeometry, Box3, Vector3 } from "three"
 import { calcMirrorPos, isCollide } from "@/base/methods"
+import { animate } from "popmotion"
 
 const calcPos = (p: number, l: number = 1): number => {
     return p * unitWidth + unitWidth * (l || 1) / 2
@@ -56,6 +57,17 @@ class DrawBox extends Component {
             tmpPos[this.mirrorInfo.face] -= this.len[this.mirrorInfo.face] - 1;
             this.mirrorComponent.setPos(tmpPos)
         }
+    }
+    setPosAnimate(pos: [number, number, number]) {
+        this.pos = pos
+        const target = new Vector3(calcPos(pos[0], this.len[0]), calcPos(pos[1], this.len[1]), calcPos(pos[2], this.len[2]))
+        animate({
+            from: this.children[0].position,
+            to: target,
+            onUpdate: (l) => {
+                this.children[0].position.copy(l)
+            }
+        })
     }
 
     setSize(size: [number, number, number]) {

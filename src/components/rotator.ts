@@ -1,6 +1,7 @@
 import Component from "@/base/component"
 import { unitWidth, type faceType } from "@/base/constants"
 import { isCollide } from "@/base/methods"
+import { animate } from "popmotion"
 import { Plane, Mesh, type ColorRepresentation, BoxGeometry, Vector3, MeshLambertMaterial, Raycaster, Box3 } from "three"
 
 const calcPos = (p: number, l: number = 1): number => {
@@ -115,6 +116,17 @@ class Rotator extends Component {
     setPos(pos: [number, number, number]) {
         this.pos = pos
         this.position.set(unitWidth * (pos[0] + 1 / 2), unitWidth * (pos[1] + 1 / 2), unitWidth * (pos[2] + 1 / 2))
+    }
+    setPosAnimate(pos: [number, number, number]) {
+        this.pos = pos
+        const target = new Vector3(unitWidth * (pos[0] + 1 / 2), unitWidth * (pos[1] + 1 / 2), unitWidth * (pos[2] + 1 / 2))
+        animate({
+            from: this.position,
+            to: target,
+            onUpdate: (l) => {
+                this.position.copy(l)
+            }
+        })
     }
 
     setSize(len: [number, number]) {

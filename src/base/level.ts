@@ -211,7 +211,7 @@ class Level {
                         const obj = this.scene.getObjectByName(v.obj.name) as Cube | DrawBox | Rotator | undefined
                         if (obj) {
                             if (v.obj.pos)
-                                obj?.setPos(v.obj.pos)
+                                obj.setPosAnimate(v.obj.pos)
                             if (v.obj.size && typeof (obj as any).setSize === 'function')
                                 (obj as any).setSize(v.obj.pos)
                             if (v.obj.face && typeof (obj as any).setFace === 'function')

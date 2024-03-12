@@ -45,8 +45,7 @@ class Cube extends Component {
             to: target,
             onUpdate: (l) => {
                 this.children[0].position.copy(l)
-            },
-            duration: 100
+            }
         })
     }
 
