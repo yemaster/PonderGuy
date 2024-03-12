@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -28,10 +28,14 @@ jobs:
     - run: npm i
     - run: npm run build
 
+    - name: Install rsync 📚
+      run: |
+        apt-get update && apt-get install -y rsync
+
     - name: deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         REPOSITORY_NAME: yemaster/PonderGuy
-        BRANCH: master
+        BRANCH: demo
         FOLDER: dist
