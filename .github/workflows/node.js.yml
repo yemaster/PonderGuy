@@ -32,6 +32,6 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        REPOSITORY_NAME: somenzz/somenzz.github.io
+        REPOSITORY_NAME: yemaster/PonderGuy
         BRANCH: master
-        FOLDER: public
+        FOLDER: dist
