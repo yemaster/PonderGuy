@@ -10,8 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-and-deploy:
-
+  build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -26,13 +25,24 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
+    - run: npm i
     - run: npm run build
+    
+  deploy:
+    needs: build
+    
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
 
-    - name: Deploy
-      uses: JamesIves/github-pages-deploy-action@releases/v3
-      with:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        REPOSITORY_NAME: yemaster/PonderGuy
-        BRANCH: master
-        FOLDER: dist
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
