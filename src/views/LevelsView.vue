@@ -10,7 +10,9 @@ import "bootstrap/dist/js/bootstrap.min.js"
 import axios from '@/base/axios'
 document.title = `关卡选择 | Ponder Guy`
 
-const baseURL = import.meta.env.BASE_URL
+let baseURL = import.meta.env.BASE_URL
+if (baseURL === "/")
+    baseURL = ""
 
 
 const fog = ref()

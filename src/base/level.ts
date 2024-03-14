@@ -314,16 +314,30 @@ class Level {
             else {
                 this.handleEvent("drag")
                 this.dragEventTime++
+
+                /*if (target.objectType === "Drawbox") {
+                    target.userData.pos = new Vector3().copy(target.children[0].position)
+                }*/
             }
         })
         this.uniteDragControl.addEventListener("drag", (e) => {
             let target = e.object as any
             while (!target.parent.isScene)
                 target = target.parent
-            if (!this.detachCollide(target) && target.onControlDrag)
+            if (!this.detectCollide(target) && target.onControlDrag) {
                 target.onControlDrag(e)
+                /*switch (target.objectType) {
+                    case "Drawbox":
+                        target.userData.pos = new Vector3().copy(target.children[0].position)
+                        break
+                }*/
+            }
             else {
-                target.setPos(target.pos)
+                /*switch (target.objectType) {
+                    case "Drawbox":
+                        target.children[0].position.copy(target.userData.pos)
+                        break
+                }*/
             }
         })
         this.uniteDragControl.addEventListener("dragend", (e) => {
@@ -541,7 +555,7 @@ class Level {
             duration: 1000
         })
     }
-    detachCollide(obj: Cube | DrawBox | Rotator) {
+    detectCollide(obj: Cube | DrawBox | Rotator) {
         return false
         if (obj.objectType === "Mirror")
             return false
@@ -559,14 +573,6 @@ class Level {
                     break out
                 }
             }
-        }
-        //console.log(flag)
-        if (flag) {
-            if (obj.userData.originalPosition)
-                obj.position.copy(obj.userData.originalPosition)
-        }
-        else {
-            obj.userData.originalPosition = new Vector3().copy(obj.position)
         }
         return flag
     }
