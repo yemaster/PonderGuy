@@ -7,7 +7,7 @@ const route = useRoute()
 const router = useRouter()
 
 // Three.js core modules
-import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2, Clock } from 'three'
+import { Scene, OrthographicCamera, AmbientLight, DirectionalLight, Vector2 } from 'three'
 import { WebGLRenderer } from 'three'
 import Picker from '@/base/picker'
 
@@ -170,7 +170,6 @@ const canvasResizeHandler = () => {
 }
 
 // Setup Scene
-const clock = new Clock()
 
 // Mouse Event
 const handleMouseDown = (e: MouseEvent) => {
@@ -275,7 +274,7 @@ const setupScene = () => {
         if (nowLevel.animateProgress !== -1) {
             nowLevel.updatePonder()
         }
-        nowLevel.updateAnimation(clock.getDelta())
+        nowLevel.updateAnimation()
         picker.pick(new Vector2(pickPosition.x, pickPosition.y), scene, camera)
         renderer.render(scene, camera)
     }

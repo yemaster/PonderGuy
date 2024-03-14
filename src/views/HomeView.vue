@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { AmbientLight, AnimationClip, AnimationMixer, Clock, Color, DirectionalLight, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene, Vector3, WebGLRenderer } from 'three'
+import { AmbientLight, Color, DirectionalLight, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene, Vector3, WebGLRenderer } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
@@ -46,13 +46,9 @@ scene.add(directionalLight)
 
 let renderer!: WebGLRenderer
 
-const clock = new Clock()
-let mixer: AnimationMixer
-
 function render() {
     renderer.render(scene, camera);
-    if (mixer)
-        mixer.update(clock.getDelta())
+    store.updateAnimation()
     requestAnimationFrame(render);
 }
 
@@ -76,19 +72,16 @@ const setupScene = () => {
     const loader = new GLTFLoader()
     loader.setMeshoptDecoder(MeshoptDecoder)
 
-    store.getPonder().then((data) => {
+    store.getPonderModel().then((data) => {
         //console.log(data)
         //const modelUrl = URL.createObjectURL(new Blob([data]))
         //console.log(modelUrl)
-        loader.parse(data, "/", gltf => {
-            const ponder = gltf.scene
-            ponder.scale.set(15, 15, 15)
-            scene.add(ponder)
-
-            mixer = new AnimationMixer(ponder)
-            const clip = mixer.clipAction(AnimationClip.findByName(gltf.animations, "Sitting"))
-            clip.play()
-        })
+        const gltf = toRaw(data)
+        const ponder = gltf.scene
+        ponder.scale.set(15, 15, 15)
+        scene.add(ponder)
+        
+        store.setAnimation("Sitting")
     })
     canvasResizeHandler()
     requestAnimationFrame(render);

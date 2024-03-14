@@ -1,5 +1,8 @@
+// Vue toRaw
+import { toRaw } from 'vue'
+
 // Three.js & Core components
-import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, AnimationClip, AnimationMixer, AnimationAction, Points, BufferGeometry, PointsMaterial, BufferAttribute, Box3 } from "three"
+import { Color, type Group, type OrthographicCamera, type PerspectiveCamera, type Scene, type WebGLRenderer, Vector3, Mesh, BoxGeometry, MeshBasicMaterial, SphereGeometry, Points, BufferGeometry, PointsMaterial, BufferAttribute, Box3 } from "three"
 import calcRoute from "@/base/calcRoute"
 import { unitWidth, type objectInfo, type levelData, type appendObjectsMethod } from "./constants";
 import Plane from "@/components/plane"
@@ -7,15 +10,15 @@ import Cube from "@/components/cube"
 import Rotator from "@/components/rotator"
 import DrawBox from "@/components/drawbox"
 import Mirror from "@/components/mirror"
-import { DragControls, GLTFLoader } from "three/examples/jsm/Addons.js"
+import { DragControls } from "three/examples/jsm/Addons.js"
 import { animate } from "popmotion"
 import { useStore } from "@/store";
 
 // Axios
 import axios from '@/base/axios'
-import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 class Level {
+    store = useStore();
     scene: Scene;
     camera: OrthographicCamera | PerspectiveCamera;
     renderer: WebGLRenderer;
@@ -39,7 +42,6 @@ class Level {
     level: number;
     levelData: string = "";
 
-    animation!: { mixer: AnimationMixer, animations: { "Running": AnimationAction, "Standing": AnimationAction } };
     particleGeometry: BufferGeometry = new BufferGeometry();
     particlePositions: Float32Array = new Float32Array(20 * 3);
     particle: Points;
@@ -349,40 +351,21 @@ class Level {
         })
     }
     setupPonder(pos: Vector3) {
-        const loader = new GLTFLoader()
-        loader.setMeshoptDecoder(MeshoptDecoder)
-
-        const store = useStore()
-        store.getPonder().then((data) => {
+        this.store.getPonderModel().then((data) => {
             //console.log(data)
             //const modelUrl = URL.createObjectURL(new Blob([data]))
             //console.log(modelUrl)
-            loader.parse(data, "/", gltf => {
-                //console.log(gltf)
-                this.ponder = gltf.scene
-                //console.log(gltf.animations)
-                this.ponder.scale.set(14.5, 14.5, 14.5)
-                this.ponder.position.set(
-                    pos.x * unitWidth + unitWidth / 2 + 100,
-                    (pos.y + 1) * unitWidth + 100,
-                    pos.z * unitWidth + unitWidth / 2 + 100
-                )
-                this.scene.add(this.ponder)
-
-                const mixer = new AnimationMixer(this.ponder)
-                this.animation = {
-                    mixer,
-                    animations: {
-                        Running: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Running")),
-                        Standing: mixer.clipAction(AnimationClip.findByName(gltf.animations, "Standing")),
-                    }
-                }
-                this.animation.animations.Running.play()
-                this.animation.animations.Running.weight = 0
-                this.animation.animations.Standing.play()
-                this.animation.animations.Standing.weight = 1
-                //console.log(this.scene)
-            })
+            const gltf = toRaw(data)
+            this.ponder = gltf.scene
+            //console.log(gltf.animations)
+            this.ponder.scale.set(14.5, 14.5, 14.5)
+            this.ponder.position.set(
+                pos.x * unitWidth + unitWidth / 2 + 100,
+                (pos.y + 1) * unitWidth + 100,
+                pos.z * unitWidth + unitWidth / 2 + 100
+            )
+            this.scene.add(this.ponder)
+            //console.log(this.scene)
         })
         const ponderGeometry = new BoxGeometry(6, 12, 6)
         const tingyunMaterial = new MeshBasicMaterial({ color: 0xdb2828 })
@@ -415,9 +398,8 @@ class Level {
         //this.scene.add(this.particles);
     }
     // Animations
-    updateAnimation(t: number) {
-        if (this.animation)
-            this.animation.mixer.update(t)
+    updateAnimation() {
+        this.store.updateAnimation()
     }
     fixPos(p: Vector3) {
         return new Vector3(
@@ -431,8 +413,7 @@ class Level {
             return
         if (this.animateProgress >= this.route.length + this.route.length - 1) {
             this.animateProgress = -5
-            this.animation.animations.Running.weight = 0
-            this.animation.animations.Standing.weight = 1
+            this.store.setAnimation("Standing")
         }
         else {
             if (this.animateProgress === this.route.length - 1) {
@@ -455,8 +436,7 @@ class Level {
                 this.particleGeometry.attributes.position.needsUpdate = true
             }
             else {
-                this.animation.animations.Running.weight = 1
-                this.animation.animations.Standing.weight = 0
+                this.store.setAnimation("Running")
                 if (direction.z > 0)
                     this.ponder.rotation.set(0, 0, 0)
                 else if (direction.z < 0)
