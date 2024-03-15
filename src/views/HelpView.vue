@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Vue Core
 import { onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 document.title = `玩法帮助 | Ponder Guy`
 

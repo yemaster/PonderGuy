@@ -1,9 +1,12 @@
 <script setup lang="ts">
 // Vue Core
+import { appInfo } from '@/base/constants';
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-document.title = `玩法帮助 | Ponder Guy`
+const version = ref(appInfo.version)
+
+document.title = `关于本项目 | Ponder Guy`
 
 const fog = ref()
 const cover = ref()
@@ -43,6 +46,10 @@ function goBack() {
         target="_blank">https://juejin.cn/post/7067122410457137165</a>
       镜子的实现参考：<a href="https://www.bilibili.com/video/BV1kJ4m1W76K/"
         target="_blank">https://www.bilibili.com/video/BV1kJ4m1W76K/</a>
+      </p>
+      <hr />
+      <p>
+        Ponder Guy. App Version: {{ version }}. by <a href="https://github.com/yemaster" target="_blank">yemaster</a>.
       </p>
     </div>
   </div>

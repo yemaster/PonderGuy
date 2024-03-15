@@ -1,5 +1,7 @@
 {
-    "appName": "ponder-guy",
-    "appVersion": "v0.0.1 Beta",
-    "appVersionNum": 0
+    "applicationId": "js.vtdev.ponderguy",
+    "version": "1.0.0",
+    "resourcesURL": "https://yemaster.github.io/ponderguy/resources.neu",
+    "data": {
+    }
 }

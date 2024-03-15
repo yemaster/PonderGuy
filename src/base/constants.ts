@@ -1,3 +1,9 @@
+export const appInfo = {
+    name: "Ponder Guy",
+    applicationId: "js.vtdev.ponderguy",
+    version: "1.0.0",
+}
+
 export const unitWidth = 8
 
 export type faceType = "+x" | "+y" | "+z" | "-x" | "-y" | "-z"
