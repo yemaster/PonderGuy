@@ -1,7 +1,7 @@
 export const appInfo = {
     name: "Ponder Guy",
     applicationId: "js.vtdev.ponderguy",
-    version: "1.0.0",
+    version: "1.0.1",
 }
 
 export const unitWidth = 8

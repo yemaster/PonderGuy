@@ -84,10 +84,17 @@ a:hover {
     white-space: nowrap;
     overflow: hidden;
     transition: all .5s cubic-bezier(1, 0.02, 1, 0.04);
-    z-index: 10;
+    z-index: 120;
 }
 
 .footer:hover {
     opacity: 1;
     max-width: 100%;
+}
+
+.loader {
+    --bs-spinner-border-width: 0.15em;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
 }

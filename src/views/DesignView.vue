@@ -3,10 +3,6 @@ import { onMounted, ref, type Ref } from "vue"
 import { RouterLink } from 'vue-router'
 import { unitWidth, type levelData, type objectInfo } from "@/base/constants"
 
-// bootstrap
-import "bootstrap/dist/css/bootstrap.min.css"
-import "bootstrap/dist/js/bootstrap.min.js"
-
 // three.js
 import { AxesHelper, Color, OrthographicCamera, Scene, WebGLRenderer, AmbientLight, DirectionalLight, Vector2 } from "three"
 import Designer from "@/base/designer"

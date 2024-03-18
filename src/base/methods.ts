@@ -1,6 +1,16 @@
 import type { Box3 } from "three"
 import { unitWidth } from "./constants"
 
+const l = ["B", "KB", "MB", "GB", "PB"]
+export const formatSize = (p: number) => {
+    let level = 0
+    while (p >= 1024) {
+        level ++
+        p /= 1024
+    }
+    return `${p.toFixed(2)}${l[level]}`
+}
+
 export const calcPos = (p: number, l: number = 1, tp: boolean = false): number => {
     let ml = 1
     if (tp)

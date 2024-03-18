@@ -3,9 +3,6 @@
 import { onMounted, ref, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import "bootstrap/dist/css/bootstrap.min.css"
-import "bootstrap/dist/js/bootstrap.min.js"
-
 // Axios
 import axios from '@/base/axios'
 document.title = `关卡选择 | Ponder Guy`

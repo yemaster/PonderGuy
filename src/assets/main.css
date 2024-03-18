@@ -128,14 +128,23 @@
 
 .pg-header-logo {
     position: absolute;
-    top: 20%;
+    top: 30%;
     left: 75%;
-    transform: translate(-70%, -100%);
-    font-size: 64px;
+    transform: translate(-70%, -50%);
+    font-size: 56px;
     white-space: nowrap;
     font-family: "genshin";
     opacity: 0;
     transition: all .5s;
+
+    z-index: 31;
+}
+
+.pg-header-logo.first {
+    font-size: 60px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .pg-start-button {
@@ -149,6 +158,20 @@
     border-top: 3px solid #212223;
     border-bottom: 3px solid #212223;
     cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .5s;
+}
+
+.pg-start-text {
+    position: absolute;
+    top: 55%;
+    left: 65%;
+    transform: translate(-60%, -50%);
+    font-size: 24px;
+    font-family: "genshin";
+    padding: 8px 24px;
+    white-space: nowrap;
     opacity: 0;
     transition: opacity .5s;
 }
@@ -170,24 +193,40 @@
 
 @media screen and (max-width: 976px) {
     .pg-header-logo {
+        font-size: 48px;
+    }
+
+    .pg-header-logo.first {
         font-size: 52px;
     }
 }
 
 @media screen and (max-width: 768px) {
     .pg-header-logo {
+        font-size: 44px;
+    }
+
+    .pg-header-logo.first {
         font-size: 48px;
     }
 }
 
 @media screen and (max-width: 576px) {
     .pg-header-logo {
+        font-size: 38px;
+    }
+
+    .pg-header-logo.first {
         font-size: 42px;
     }
 }
 
 @media screen and (max-width: 368px) {
     .pg-header-logo {
+        font-size: 32px;
+    }
+
+    .pg-header-logo.first {
         font-size: 36px;
     }
 }

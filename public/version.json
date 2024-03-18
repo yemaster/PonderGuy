@@ -1,7 +1,22 @@
 {
     "applicationId": "js.vtdev.ponderguy",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "resourcesURL": "https://yemaster.github.io/PonderGuy/resources.neu",
     "data": {
+        "updateLog": [
+            {
+                "version": "1.0.1",
+                "logs": [
+                    "添加了自动更新程序",
+                    "更改了程序logo"
+                ]
+            },
+            {
+                "version": "1.0.0",
+                "logs": [
+                    "优化了模型缓存，加载速度更快"
+                ]
+            }
+        ]
     }
 }
