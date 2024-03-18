@@ -1,0 +1,1 @@
+const n={async checkUpdate(a,t){console.log("Oh mama"),setTimeout(()=>{a(!1,"1.0.0","1.0.0","")},1e3)},async update(a,t,r){let e=0;const o=setInterval(()=>{e+=Math.random(),e>=100?(e=100,t(),clearInterval(o)):a(e,Math.random()*1024*10,123456,123456*e/100)},100)},async restartAPP(){location.reload()}};export{n as default};
