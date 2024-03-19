@@ -24,10 +24,14 @@ function goBack() {
     <div class="cover" ref="cover"></div>
     <div class="gs" ref="fog">
         <div class="pg-container">
-            <h1 class="pg-header">玩法帮助</h1>
-            <ul class="pg-nav">
-                <li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link" @click="goBack">返回</a></li>
-            </ul>
+            <div class="pg-flex" style="width: 100%; justify-content: space-between;">
+                <h1 class="pg-header">玩法帮助</h1>
+                <div style="align-self: flex-end;">
+                    <ul class="pg-nav">
+                        <li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link" @click="goBack">返回</a></li>
+                    </ul>
+                </div>
+            </div>
             <div class="pg-divider"></div>
             <p>本游戏是《崩坏·星穹铁道》中梦境迷钟解谜的复刻版本。未来可能会加入更多玩法。</p>
             <p>游戏目标：用鼠标操作方块，使得Ponder小子和红色方块之间的路径联通。</p>

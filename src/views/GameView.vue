@@ -419,6 +419,7 @@ onBeforeUnmount(() => {
     color: #fff;
     font-family: "genshin";
     font-size: 20px;
+    visibility: hidden;
 
     opacity: 0;
 
@@ -427,5 +428,6 @@ onBeforeUnmount(() => {
 
 .pg-hint.show {
     opacity: 1;
+    visibility: visible;
 }
 </style>

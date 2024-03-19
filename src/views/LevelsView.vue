@@ -7,6 +7,11 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from '@/base/axios'
 document.title = `关卡选择 | Ponder Guy`
 
+import pgModal from '@/components/pgModal.vue';
+import pgButton from '@/components/pgButton.vue';
+
+const importModalShow = ref(false)
+
 let baseURL = import.meta.env.BASE_URL
 if (baseURL === "/")
     baseURL = ""
@@ -43,19 +48,15 @@ function gotoGame(lid: number) {
     cover.value.style.opacity = "1"
     setTimeout(() => { router.push(`/game/${lid}`) }, 500)
 }
-function gotoHelp() {
+function gotoLink(link: string) {
     cover.value.style.visibility = "visible"
     cover.value.style.opacity = "1"
-    setTimeout(() => { router.push(`/help`) }, 500)
-}
-function gotoDesigner() {
-    cover.value.style.visibility = "visible"
-    cover.value.style.opacity = "1"
-    setTimeout(() => { router.push(`/game/design`) }, 500)
+    setTimeout(() => { router.push(link) }, 500)
 }
 
 const levelDataString = ref("")
 function importLevel() {
+    importModalShow.value = false
     localStorage.levelData = levelDataString.value
     cover.value.style.visibility = "visible"
     cover.value.style.opacity = "1"
@@ -67,11 +68,19 @@ function importLevel() {
     <div class="cover" ref="cover"></div>
     <div class="gs" ref="fog">
         <div class="pg-container">
-            <h1 class="pg-header">关卡选择</h1>
-            <ul class="pg-nav">
-                <li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link" @click="gotoHelp">玩法帮助</a></li>
-                <li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link" @click="gotoDesigner">关卡设计器</a></li>
-            </ul>
+            <div class="pg-flex" style="width: 100%; justify-content: space-between;">
+                <h1 class="pg-header">关卡选择</h1>
+                <div style="align-self: flex-end;">
+                    <ul class="pg-nav">
+                        <li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link"
+                                @click="gotoLink('/help')">玩法帮助</a></li>
+                        <li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link"
+                                @click="gotoLink('/game/design')">关卡设计器</a></li>
+                        <!--li class="pg-nav-item"><a href="javascript:;" class="pg-nav-link"
+                                @click="gotoLink('/settings')">设置</a></li-->
+                    </ul>
+                </div>
+            </div>
             <div class="pg-divider"></div>
             <div class="pg-level-list">
                 <div class="pg-level-box" v-for="(l, i) in level_list" v-bind:key="i"
@@ -83,8 +92,8 @@ function importLevel() {
                         </div>
                     </div>
                 </div>
-                <div class="pg-level-box" :style="`background-image: url(${baseURL}/imgs/designer.jpg);`" data-bs-toggle="modal"
-                    data-bs-target="#importModal">
+                <div class="pg-level-box" :style="`background-image: url(${baseURL}/imgs/designer.jpg);`"
+                   @click="importModalShow = true">
                     <div class="pg-level-text">
                         <div class="pg-level-text-content">
                             <div class="pg-level-name">
@@ -95,27 +104,20 @@ function importLevel() {
             </div>
         </div>
     </div>
-    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="importModalLabel">自定义关卡</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    关卡代码<br>
-                    <textarea class="form-control" style="width: 100%; height: 100%; min-height: 200px"
-                        v-model="levelDataString"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                        @click="importLevel">确定</button>
-                    <button type="button" id="closeModelButton" class="btn btn-secondary"
-                        data-bs-dismiss="modal">取消</button>
-                </div>
+    <pg-modal title="自定义代码" :backClick="false" backgroundColor="#f0f1f3" mode="round" v-model:show="importModalShow">
+        <template #content>
+            <div class="update-log">
+                <label>关卡代码</label>
+                <textarea class="pg-textarea" style="width: 100%; height: 100%; min-height: 200px"
+                    v-model="levelDataString"></textarea>
             </div>
-        </div>
-    </div>
+        </template>
+        <template #append>
+            <pg-button color="#db2828" style="width: 100px" mode="round" size="tiny"
+                @click="importModalShow = false">取消</pg-button>
+            <pg-button style="width: 100px" mode="round" size="tiny" @click="importLevel">导入</pg-button>
+        </template>
+    </pg-modal>
 </template>
 
 <style scoped>

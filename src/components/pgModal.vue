@@ -33,9 +33,10 @@ function hideModal(force = false) {
 }
 
 watch(() => show.value, (n) => {
+    const delay = n === true ? 0 : 200
     setTimeout(() => {
         realShowMode.value = n
-    }, 200)
+    }, delay)
 })
 </script>
 
@@ -61,7 +62,7 @@ watch(() => show.value, (n) => {
 
 <style>
 .pg-modal.hide {
-    display: none;
+    visibility: hidden;
 }
 
 .pg-modal-back {

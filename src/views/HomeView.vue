@@ -112,6 +112,7 @@ function tryToShow() {
                 checkUpdate((needUpdate: boolean, nowV: string, lat: string, log: string) => {
                     nowVersion.value = nowV
                     latest.value = lat
+                    updateLog.value = log
                     if (!needUpdate)
                         nextStage()
                     else {

@@ -19,6 +19,10 @@ body {
     width: 100vw;
     height: 100vh;
 
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: #212223;
+
     overflow: hidden;
     user-select: none;
 }
@@ -97,4 +101,34 @@ a:hover {
     display: inline-block;
     vertical-align: middle;
     margin-right: 5px;
+}
+
+.pg-flex {
+    display: flex;
+}
+
+.pg-flex ul {
+    align-content: end;
+}
+
+label {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.pg-textarea {
+    outline: none;
+    width: 100%;
+    border: 1px solid #eee;
+    box-shadow: none;
+    border-radius: 5px;
+
+    box-sizing: border-box;
+    padding: 4px 8px;
+    transition: all .2s;
+}
+
+.pg-textarea:focus {
+    border-color: transparent;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
 }

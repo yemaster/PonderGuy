@@ -12,6 +12,9 @@ import Picker from "@/base/picker"
 import { OrbitControls, TransformControls } from "three/examples/jsm/Addons.js"
 import { fixPos } from "@/base/methods"
 
+import pgModal from "@/components/pgModal.vue"
+import pgButton from "@/components/pgButton.vue"
+
 document.title = "关卡设计器 | Ponder Guy"
 
 const leftControl = ref()
@@ -321,15 +324,19 @@ function changeMirror() {
 const levelDataString = ref("")
 const levelDataSetMode = ref("导出")
 const errorInfo = ref("")
+
+const modalShow = ref(false)
 function importLevelBefore() {
     levelDataSetMode.value = "导入"
     levelDataString.value = ""
     errorInfo.value = ""
+    modalShow.value = true
 }
 function exportLevel() {
     levelDataSetMode.value = "导出"
     levelDataString.value = btoa(JSON.stringify(levelInfo.value))
     errorInfo.value = ""
+    modalShow.value = true
 }
 function importLevel() {
     try {
@@ -380,11 +387,9 @@ function importLevel() {
                     <div class="btn-group">
                         <router-link class="btn btn-sm btn-outline-secondary" to="/game/list"
                             style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">返回</router-link>
-                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
-                            data-bs-target="#exportModal" @click="importLevelBefore"
+                        <button class="btn btn-sm btn-outline-secondary" @click="importLevelBefore"
                             style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">导入</button>
-                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
-                            data-bs-target="#exportModal" @click="exportLevel"
+                        <button class="btn btn-sm btn-outline-secondary" @click="exportLevel"
                             style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">导出</button>
                     </div>
                 </li>
@@ -621,28 +626,27 @@ function importLevel() {
             <canvas id="pg-canvas"></canvas>
         </div>
     </div>
-    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exportModalLabel">{{ levelDataSetMode }}代码</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    关卡代码<br>
-                    <textarea class="form-control" style="width: 100%; height: 100%; min-height: 200px"
-                        v-model="levelDataString"></textarea><br>
-                    <span style="color: #db2828">{{ errorInfo }}</span>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" v-if="levelDataSetMode === '导入'"
-                        @click="importLevel">确定</button>
-                    <button type="button" id="closeModelButton" class="btn btn-secondary"
-                        data-bs-dismiss="modal">取消</button>
-                </div>
+    <pg-modal :title="`${levelDataSetMode}代码`" :backClick="false" backgroundColor="#f0f1f3" mode="round"
+        v-model:show="modalShow">
+        <template #content>
+            <div class="update-log">
+                <label>关卡代码</label>
+                <textarea class="pg-textarea" style="width: 100%; height: 100%; min-height: 200px"
+                    v-model="levelDataString"></textarea><br>
+                <span style="color: #db2828">{{ errorInfo }}</span>
             </div>
-        </div>
-    </div>
+        </template>
+        <template #append>
+            <template v-if="levelDataSetMode === '导入'">
+                <pg-button color="#db2828" style="width: 100px" mode="round" size="tiny"
+                    @click="modalShow = false">取消</pg-button>
+                <pg-button style="width: 100px" mode="round" size="tiny" @click="importLevel">导入</pg-button>
+            </template>
+            <template v-else>
+                <pg-button style="width: 100px" mode="round" size="tiny" @click="modalShow = false">关闭</pg-button>
+            </template>
+        </template>
+    </pg-modal>
 </template>
 
 <style scoped>

@@ -199,6 +199,12 @@
     .pg-header-logo.first {
         font-size: 52px;
     }
+
+    .pg-start-button {
+        font-size: 20px;
+        border-width: 3px;
+        padding: 8px 24px;
+    }
 }
 
 @media screen and (max-width: 768px) {
@@ -209,6 +215,12 @@
     .pg-header-logo.first {
         font-size: 48px;
     }
+
+    .pg-start-button {
+        font-size: 18px;
+        border-width: 3px;
+        padding: 6px 18px;
+    }
 }
 
 @media screen and (max-width: 576px) {
@@ -218,6 +230,12 @@
 
     .pg-header-logo.first {
         font-size: 42px;
+        border-width: 2px;
+    }
+
+    .pg-start-button {
+        font-size: 16px;
+        padding: 5px 15px;
     }
 }
 
@@ -228,6 +246,11 @@
 
     .pg-header-logo.first {
         font-size: 36px;
+    }
+
+    .pg-start-button {
+        font-size: 14px;
+        border-width: 2px;
     }
 }
 
