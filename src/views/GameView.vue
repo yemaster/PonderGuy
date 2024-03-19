@@ -94,14 +94,14 @@ let isObjectChosen = false
 let chosenObject: any = null
 let isPress = false
 
-const getCanvasRelativePosition = (e: MouseEvent) => {
+const getCanvasRelativePosition = (e: MouseEvent | Touch) => {
     const rect = canvas.getBoundingClientRect()
     return {
         x: (e.clientX - rect.left) * canvas.width / rect.width,
         y: (e.clientY - rect.top) * canvas.height / rect.height,
     }
 }
-const setPickPosition = (e: MouseEvent) => {
+const setPickPosition = (e: MouseEvent | Touch) => {
     const pos = getCanvasRelativePosition(e)
     pickPosition.x = (pos.x / canvas.width) * 2 - 1
     pickPosition.y = (pos.y / canvas.height) * -2 + 1
@@ -134,16 +134,20 @@ const clearPickPosition = () => {
     isObjectChosen = false
 }
 clearPickPosition()
-window.addEventListener('mousemove', setPickPosition)
+window.addEventListener('mousemove', (e) => {
+    setPickPosition(e)
+})
 window.addEventListener('mouseout', clearPickPosition)
 window.addEventListener('mouseleave', clearPickPosition)
-/*window.addEventListener('touchstart', (e: TouchEvent) => {
+window.addEventListener('touchstart', (e: TouchEvent) => {
     e.preventDefault()
-    setPickPosition(e.touches[0])
+    if (e.touches.length > 0)
+        setPickPosition(e.touches[0])
 }, { passive: false })
 window.addEventListener('touchmove', (e: TouchEvent) => {
-    setPickPosition(e.touches[0])
-})*/
+    if (e.touches.length > 0)
+        setPickPosition(e.touches[0])
+})
 window.addEventListener('touchend', clearPickPosition)
 
 // Hanlde canvas resize event
@@ -172,7 +176,7 @@ const canvasResizeHandler = () => {
 // Setup Scene
 
 // Mouse Event
-const handleMouseDown = (e: MouseEvent) => {
+const handleMouseDown = (e: MouseEvent | Touch) => {
     isObjectChosen = !(picker.pickedObject === undefined)
     isPress = true
     originPosition.x = e.clientX
@@ -202,6 +206,15 @@ const handleMouseUp = () => {
         }
     }
 }
+const handleTouchStart = (e: TouchEvent) => {
+    e.preventDefault()
+    if (e.touches.length > 0)
+        handleMouseDown(e.touches[0])
+}
+const handleTouchEnd = (e: TouchEvent) => {
+    if (e.touches.length > 0)
+        handleMouseDown(e.touches[0])
+}
 
 let oc: OrbitControls
 
@@ -226,6 +239,8 @@ const setupScene = () => {
 
     canvas.addEventListener("mousedown", handleMouseDown)
     canvas.addEventListener("mouseup", handleMouseUp)
+    window.addEventListener('touchstart', handleTouchStart, { passive: false })
+    window.addEventListener('touchend', handleTouchEnd)
 
     canvasResizeHandler()
 
@@ -315,6 +330,8 @@ onBeforeUnmount(() => {
     window.removeEventListener("click", levelClickEvent)
     canvas.removeEventListener("mousedown", handleMouseDown)
     canvas.removeEventListener("mouseup", handleMouseUp)
+    canvas.removeEventListener("touchstart", handleTouchStart)
+    canvas.removeEventListener("touchend", handleTouchEnd)
 
     try {
         renderer.dispose();
