@@ -1,9 +1,17 @@
 {
     "applicationId": "js.vtdev.ponderguy",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "resourcesURL": "https://yemaster.github.io/PonderGuy/resources.neu",
     "data": {
         "updateLog": [
+            {
+                "version": "1.0.2",
+                "logs": [
+                    "添加了对移动端的支持",
+                    "修复了改变物体位置后，镜子中位置不变的问题",
+                    "修复了镜子中物体设置的问题"
+                ]
+            },
             {
                 "version": "1.0.1",
                 "logs": [

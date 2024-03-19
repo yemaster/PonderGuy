@@ -246,6 +246,7 @@ class Level {
                     break
             }
         })
+        this.mirror?.updateMirrorCubePos()
         //this.setupDragControls()
     }
     // Activated when a event is happened

@@ -134,20 +134,16 @@ const clearPickPosition = () => {
     isObjectChosen = false
 }
 clearPickPosition()
-window.addEventListener('mousemove', (e) => {
-    setPickPosition(e)
-})
+window.addEventListener('mousemove', setPickPosition)
 window.addEventListener('mouseout', clearPickPosition)
 window.addEventListener('mouseleave', clearPickPosition)
-window.addEventListener('touchstart', (e: TouchEvent) => {
+const setPickPositionForTouch = (e: TouchEvent) => {
     e.preventDefault()
     if (e.touches.length > 0)
         setPickPosition(e.touches[0])
-}, { passive: false })
-window.addEventListener('touchmove', (e: TouchEvent) => {
-    if (e.touches.length > 0)
-        setPickPosition(e.touches[0])
-})
+}
+window.addEventListener('touchstart', setPickPositionForTouch, { passive: false })
+window.addEventListener('touchmove', setPickPositionForTouch)
 window.addEventListener('touchend', clearPickPosition)
 
 // Hanlde canvas resize event
@@ -326,6 +322,9 @@ onBeforeUnmount(() => {
     window.removeEventListener('mousemove', setPickPosition)
     window.removeEventListener('mouseout', clearPickPosition)
     window.removeEventListener('mouseleave', clearPickPosition)
+    window.removeEventListener("touchstart", setPickPositionForTouch)
+    window.removeEventListener("touchmove", setPickPositionForTouch)
+    window.removeEventListener("touchend", clearPickPosition)
     window.removeEventListener("resize", debounce(canvasResizeHandler, 100))
     window.removeEventListener("click", levelClickEvent)
     canvas.removeEventListener("mousedown", handleMouseDown)

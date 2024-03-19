@@ -76,10 +76,11 @@ export default class Mirror extends Component {
                         break
                     case "Rotator":
                         v.mirrorComponent.setPos(calcMirrorPos(v.pos, this.pos, face))
-                        v.mirrorComponent.setFace(
-                            ((v.face[0][0] === "-") ? "+" : "-") + v.face[0][1],
-                            ((v.face[1][0] === "-") ? "+" : "-") + v.face[1][1],
-                        )
+                        //console.log(v.mirrorComponent)
+                        v.mirrorComponent.setFace([
+                            (v.face[0][1] !== mirrorAxis ? v.face[0][0] : reverseFace(v.face[0][0] as ("+" | "-"))) + v.face[0][1],
+                            (v.face[1][1] !== mirrorAxis ? v.face[1][0] : reverseFace(v.face[1][0] as ("+" | "-"))) + v.face[1][1],
+                        ])
                         v.mirrorComponent.setAngle(v.angle * ((v.direction === face) ? 1 : -1))
                         v.mirrorInfo = {
                             face
