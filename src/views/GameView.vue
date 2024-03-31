@@ -115,6 +115,7 @@ const setPickPosition = (e: MouseEvent | Touch) => {
         }
         else {
             if (chosenObject && nowLevel.animateProgress === -1) {
+                //console.log("YES")
                 if (chosenObject.onDrag)
                     chosenObject.onDrag(picker.raycaster, picker.pickedObjectPoint)
             }
@@ -138,9 +139,11 @@ window.addEventListener('mousemove', setPickPosition)
 window.addEventListener('mouseout', clearPickPosition)
 window.addEventListener('mouseleave', clearPickPosition)
 const setPickPositionForTouch = (e: TouchEvent) => {
-    e.preventDefault()
-    if (e.touches.length > 0)
+    if (e.touches.length > 0) {
         setPickPosition(e.touches[0])
+        if (scene && camera)
+            picker.pick(new Vector2(pickPosition.x, pickPosition.y), scene, camera)
+    }
 }
 window.addEventListener('touchstart', setPickPositionForTouch, { passive: false })
 window.addEventListener('touchmove', setPickPositionForTouch)
@@ -207,9 +210,8 @@ const handleTouchStart = (e: TouchEvent) => {
     if (e.touches.length > 0)
         handleMouseDown(e.touches[0])
 }
-const handleTouchEnd = (e: TouchEvent) => {
-    if (e.touches.length > 0)
-        handleMouseDown(e.touches[0])
+const handleTouchEnd = () => {
+    handleMouseUp()
 }
 
 let oc: OrbitControls
@@ -227,7 +229,7 @@ const setupScene = () => {
         showHint, hideHint
     })
     //window.level = nowLevel
-    picker.updateObjs(scene.children)
+    picker.updateObjs(nowLevel.allCubes)
 
     oc = new OrbitControls(camera, renderer.domElement)
     oc.enableRotate = false
